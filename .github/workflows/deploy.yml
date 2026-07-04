@@ -1,0 +1,30 @@
+name: CD Pipeline - Deploy to Linode
+
+on:
+  push:
+    branches:
+      - main  # Triggers the deployment whenever you push to the main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy application via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.LINODE_HOST }}
+          username: ${{ secrets.LINODE_USERNAME }}
+          key: ${{ secrets.LINODE_SSH_KEY }}
+          port: 22
+          script: |
+            # Navigate to the repository directory on Linode
+            cd /root/jackpot || git clone https://github.com/${{ github.repository }}.git /root/jackpot && cd /root/jackpot
+            
+            # Fetch the latest code changes
+            git fetch --all
+            git reset --hard origin/main
+            
+            # Rebuild and restart the containers silently in the background
+            docker compose down
+            docker compose --profile app up --build -d
