@@ -1,45 +1,43 @@
-  version: '3.8'
+version: '3.8'
 
-  services:
-    kafka:
-      image: confluentinc/cp-kafka:7.6.0 # Modern version supporting KRaft by default
-      container_name: jackpot-kafka
-      ports:
-        - "9092:9092"
-      environment:
-        # Enable KRaft mode
-        KAFKA_NODE_ID: 1
-        KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT'
-        KAFKA_ADVERTISED_LISTENERS: 'INTERNAL://kafka:2192,EXTERNAL://localhost:9092'
-        KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-        KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-        KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-        KAFKA_TRANSACTION_STATE_LOG_REREPLICATION_FACTOR: 1
-        KAFKA_PROCESS_ROLES: 'broker,controller'
-        KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
-        KAFKA_LISTENERS: 'INTERNAL://0.0.0.0:2192,EXTERNAL://0.0.0.0:9092,CONTROLLER://0.0.0.0:29093'
-        KAFKA_INTER_BROKER_LISTENER_NAME: 'INTERNAL'
-        KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
-        KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
-        # Cluster ID generation for KRaft initialization
-        CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
-      networks:
-        - jackpot-network
+services:
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: jackpot-kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'INTERNAL://kafka:29092,EXTERNAL://localhost:9092'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REREPLICATION_FACTOR: 1
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
+      KAFKA_LISTENERS: 'INTERNAL://0.0.0.0:29092,EXTERNAL://0.0.0.0:9092,CONTROLLER://0.0.0.0:29093'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'INTERNAL'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+    networks:
+      - jackpot-network
 
-    jackpot-app:
-      build: .
-      container_name: jackpot-backend-service
-      ports:
-        - "8080:8080"
-      depends_on:
-        - kafka
-      environment:
-        SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:2192
-      networks:
-        - jackpot-network
-      profiles:
-        - app
+  jackpot-app:
+    build: .
+    container_name: jackpot-backend-service
+    ports:
+      - "8080:8080"
+    depends_on:
+      - kafka
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    networks:
+      - jackpot-network
+    profiles:
+      - app
 
-  networks:
-    jackpot-network:
-      driver: bridge
+networks:
+  jackpot-network:
+    driver: bridge
