@@ -1,6 +1,6 @@
 package com.sporty.jackpot_service.consumer;
 
-import com.sporty.jackpot_service.dto.request.BetPayload;
+import com.sporty.jackpot_service.dto.SubmitBetRequest;
 import com.sporty.jackpot_service.model.Jackpot;
 import com.sporty.jackpot_service.model.JackpotContribution;
 import com.sporty.jackpot_service.repository.JackpotContributionRepository;
@@ -43,7 +43,7 @@ public class JackpotBetConsumer {
             properties = {"auto.offset.reset=earliest"}
     )
     @Transactional // Guarantees atomicity: locks, state updates, and logs succeed or fail together
-    public void consumeJackpotBet(BetPayload payload) {
+    public void consumeJackpotBet(SubmitBetRequest payload) {
         log.info("Received background bet event processing task for Bet ID: {}", payload.betId());
 
         // 1. Idempotency Check: Prevent duplicate ledger processing if Kafka re-delivers the message

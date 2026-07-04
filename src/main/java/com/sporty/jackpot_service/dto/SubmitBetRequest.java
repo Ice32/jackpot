@@ -1,4 +1,4 @@
-package com.sporty.jackpot_service.dto.request;
+package com.sporty.jackpot_service.dto;
 
 
 import jakarta.validation.constraints.DecimalMin;
@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 
-public record BetPayload(
+public record SubmitBetRequest(
         @NotBlank String betId,
         @NotBlank String jackpotId,
         @NotBlank String userId,

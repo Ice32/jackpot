@@ -18,3 +18,12 @@ jackpot:
         decay-step: 1000.00  # Bins calculated per $1,000 increments
         decay-rate: 0.005    # Drops by 0.5% per bin
         floor-rate: 0.01     # Levels off permanently at 1% minimum
+    reward:
+      fixed:
+        win-chance: 0.5           # Flat 0.5% chance to win on any bet
+      variable:
+        base-chance: 0.1
+        tier1-threshold: 5000.00
+        tier1-chance: 1.0
+        tier2-threshold: 10000.00
+        tier2-chance: 2.0

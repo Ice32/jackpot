@@ -8,7 +8,7 @@ public interface RewardStrategy {
      * Determines whether the current bet wins the jackpot reward.
      * @return true if it's a win, false otherwise.
      */
-    boolean evaluateWin(BigDecimal stakeAmount, BigDecimal currentPoolBalance);
+    boolean evaluateWin(BigDecimal currentPoolBalance);
 
     /**
      * Matches the strategy implementation to the DB Enum configuration type.

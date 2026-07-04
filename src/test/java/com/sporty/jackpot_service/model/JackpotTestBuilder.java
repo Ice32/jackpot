@@ -22,14 +22,33 @@ public class JackpotTestBuilder {
                 .contributionStrategy(ContributionStrategyType.VARIABLE);
     }
 
+    public static JackpotTestBuilder fixedRewardChance() {
+        return new JackpotTestBuilder()
+                .rewardStrategy(RewardStrategyType.FIXED);
+    }
+
+    public static JackpotTestBuilder variableRewardChance() {
+        return new JackpotTestBuilder()
+                .rewardStrategy(RewardStrategyType.VARIABLE);
+    }
 
     public JackpotTestBuilder contributionStrategy(ContributionStrategyType contributionStrategy) {
         this.contributionStrategy = contributionStrategy;
         return this;
     }
 
+    public JackpotTestBuilder rewardStrategy(RewardStrategyType rewardStrategy) {
+        this.rewardStrategy = rewardStrategy;
+        return this;
+    }
+
     public JackpotTestBuilder currentBalance(BigDecimal currentBalance) {
         this.currentBalance = currentBalance;
+        return this;
+    }
+
+    public JackpotTestBuilder baseAmount(BigDecimal baseAmount) {
+        this.baseAmount = baseAmount;
         return this;
     }
 

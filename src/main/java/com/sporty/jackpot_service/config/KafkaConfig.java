@@ -1,6 +1,6 @@
 package com.sporty.jackpot_service.config;
 
-import com.sporty.jackpot_service.dto.request.BetPayload;
+import com.sporty.jackpot_service.dto.SubmitBetRequest;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -24,7 +24,7 @@ public class KafkaConfig {
     private String bootstrapServers;
 
     @Bean
-    public ProducerFactory<String, BetPayload> producerFactory() {
+    public ProducerFactory<String, SubmitBetRequest> producerFactory() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
 
@@ -36,12 +36,12 @@ public class KafkaConfig {
     }
 
     @Bean
-    public KafkaTemplate<String, BetPayload> kafkaTemplate() {
+    public KafkaTemplate<String, SubmitBetRequest> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 
     @Bean
-    public ConsumerFactory<String, BetPayload> consumerFactory() {
+    public ConsumerFactory<String, SubmitBetRequest> consumerFactory() {
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ConsumerConfig.GROUP_ID_CONFIG, "jackpot-service-group");
@@ -54,15 +54,15 @@ public class KafkaConfig {
         props.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, "org.springframework.kafka.support.serializer.JsonDeserializer");
 
         // Pass your direct properties configuration flags cleanly
-        props.put("spring.json.value.default.type", "com.sporty.jackpot_service.dto.request.BetPayload");
+        props.put("spring.json.value.default.type", "com.sporty.jackpot_service.dto.SubmitBetRequest");
         props.put("spring.json.trusted.packages", "com.sporty.jackpot_service.dto");
 
         return new DefaultKafkaConsumerFactory<>(props);
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, BetPayload> kafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, BetPayload> factory =
+    public ConcurrentKafkaListenerContainerFactory<String, SubmitBetRequest> kafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, SubmitBetRequest> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
         return factory;
