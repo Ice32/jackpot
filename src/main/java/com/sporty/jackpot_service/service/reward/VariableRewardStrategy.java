@@ -19,6 +19,11 @@ public class VariableRewardStrategy implements RewardStrategy {
             return false;
         }
 
+        // 1. If the pool hits or exceeds the limit, win chance becomes 100%
+        if (currentPoolBalance.compareTo(properties.poolLimit()) >= 0) {
+            return true;
+        }
+
         // 2. Evaluate dynamic odds scaling based on properties
         double winningChance = properties.baseChance();
 

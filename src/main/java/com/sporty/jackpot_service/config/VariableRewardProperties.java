@@ -10,7 +10,8 @@ public record VariableRewardProperties(
         BigDecimal tier1Threshold,
         double tier1Chance,
         BigDecimal tier2Threshold,
-        double tier2Chance
+        double tier2Chance,
+        BigDecimal poolLimit
 ) {
 
 }

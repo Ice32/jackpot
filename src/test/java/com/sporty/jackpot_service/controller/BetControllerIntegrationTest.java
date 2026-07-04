@@ -49,6 +49,9 @@ class BetControllerIntegrationTest {
     @Value("${jackpot.strategies.contribution.variable.floor-rate}")
     private BigDecimal variableContributionFloorRate;
 
+    @Value("${jackpot.strategies.reward.variable.pool-limit}")
+    private BigDecimal variableRewardPoolLimit;
+
     @Test
     void submitBet_FixedContributionJackpot_ContributionPersisted() throws Exception {
         var initialJackpotBalance = new BigDecimal("1100");
@@ -178,10 +181,37 @@ class BetControllerIntegrationTest {
                 .andExpect(status().is4xxClientError());
     }
 
+    @Test
+    void evaluateBet_VariableRewardChanceJackpotAndPoolLimitHit_Won() throws Exception {
+        var jackpotBaseBalance = new BigDecimal("100");
+        var initialJackpotBalance = variableRewardPoolLimit.add(BigDecimal.ONE);
+        var jackpot = jackpotRepository.save(JackpotTestBuilder.variableRewardChance()
+                .baseAmount(jackpotBaseBalance)
+                .currentBalance(initialJackpotBalance)
+                .build());
+        var jackpotContribution = jackpotContributionRepository.save(
+                new JackpotContributionTestBuilder(jackpot.getJackpotId()).build()
+        );
+        var evaluationRequest = new EvaluateBetRequestTestBuilder(jackpotContribution).build();
+
+        var responseAsString = mvc.perform(post("/api/v1/bets/evaluate")
+                        .content(mapper.writeValueAsString(evaluationRequest))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        EvaluationResult result = mapper.readValue(responseAsString, EvaluationResult.class);
+        assertThat(result.won()).isTrue();
+        assertThat(result.betId()).isEqualTo(evaluationRequest.betId());
+        assertThat(result.remainingPoolBalance()).isEqualByComparingTo(jackpotBaseBalance);
+        assertThat(result.payoutAmount()).isEqualByComparingTo(initialJackpotBalance);
+    }
+
     @Nested
     @IntegrationTest
     @SpringBootTest(properties = {
             "jackpot.strategies.reward.fixed.win-chance=100",
+            "jackpot.strategies.reward.variable.base-chance=0",
             "jackpot.strategies.reward.variable.tier1-chance=100"
     })
     class SureWinTests {

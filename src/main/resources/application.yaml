@@ -41,3 +41,4 @@ jackpot:
         tier1-chance: 10
         tier2-threshold: 10000.00
         tier2-chance: 20
+        pool-limit: 25000.00
