@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: jackpot-service
+logging:
+  level:
+    org:
+      apache:
+        kafka: WARN
+    kafka: WARN
+    state: WARN
+jackpot:
+  strategies:
+    contribution:
+      fixed:
+        contribution-rate: 0.02
+      variable:
+        initial-rate: 0.05   # Starts at 5% contribution
+        decay-step: 1000.00  # Bins calculated per $1,000 increments
+        decay-rate: 0.005    # Drops by 0.5% per bin
+        floor-rate: 0.01     # Levels off permanently at 1% minimum
