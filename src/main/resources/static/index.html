@@ -2,30 +2,77 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <!-- Added viewport meta tag to fix mobile scaling -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jackpot Live Demo</title>
     <style>
-        body { font-family: system-ui, sans-serif; text-align: center; padding-top: 50px; background: #121212; color: white; }
-        .box { border: 2px dashed #444; padding: 40px; max-width: 450px; margin: 0 auto; border-radius: 8px; }
-        .win { color: #4cdf87; font-weight: bold; font-size: 1.5rem; }
+        body {
+            font-family: system-ui, sans-serif;
+            text-align: center;
+            padding: 20px 10px; /* Reduced top padding, added side padding */
+            background: #121212;
+            color: white;
+            margin: 0;
+        }
+        h1 {
+            font-size: 1.8rem; /* Smaller text for mobile headers */
+            margin-bottom: 5px;
+        }
+        p {
+            font-size: 0.9rem;
+            color: #ccc;
+            margin-bottom: 20px;
+        }
+        .box {
+            border: 2px dashed #444;
+            padding: 30px 20px;
+            max-width: 400px;
+            margin: 0 auto 20px auto;
+            border-radius: 8px;
+            box-sizing: border-box; /* Prevents padding from breaking layout width */
+        }
+        /* Mobile-friendly Action Button */
+        .btn {
+            background: #4cdf87;
+            color: #121212;
+            border: none;
+            padding: 15px 32px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 4px 15px rgba(76, 223, 135, 0.3);
+            transition: transform 0.1s ease;
+            -webkit-tap-highlight-color: transparent; /* Removes blue flash on tap */
+        }
+        .btn:active {
+            transform: scale(0.98);
+            background: #3cbe71;
+        }
+        .win { color: #4cdf87; font-weight: bold; font-size: 1.4rem; }
         .lose { color: #ff5252; font-size: 1.2rem; }
-        .stats { color: #bbb; font-size: 0.9rem; margin-top: 10px; }
+        .stats { color: #bbb; font-size: 0.9rem; margin-top: 10px; line-height: 1.4; }
     </style>
 </head>
 <body>
 
 <h1>🏆 Sporty Jackpot Demo</h1>
-<p>Press the <strong>SPACEBAR</strong> to hit the actual REST API endpoints.</p>
+<p>Tap the button below or press <strong>SPACEBAR</strong> to test.</p>
 
 <div class="box">
     <div id="result">
-        <p style="color: #888;">Waiting for spacebar click...</p>
+        <p style="color: #888;">Ready for action...</p>
     </div>
 </div>
 
-<script>
-    document.body.addEventListener('keyup', async function(event) {
-        if (event.key !== ' ' || event.target.tagName === 'INPUT') return;
+<!-- Added Touch Button for Smartphones -->
+<button id="triggerBet" class="btn">🎰 Place Bet</button>
 
+<script>
+    // Isolated core logic into a reusable function
+    async function triggerWager() {
         const resultDiv = document.getElementById('result');
         resultDiv.innerHTML = '<p style="color: #888;">Processing wager...</p>';
 
@@ -53,7 +100,7 @@
             // 2. Poll the evaluate endpoint with an exponential backoff retry mechanism
             const maxRetries = 5;
             let attempt = 0;
-            let delay = 30; // start with a tight 30ms check
+            let delay = 30;
             let evaluateResponse;
             let resultJson;
 
@@ -69,22 +116,18 @@
                     break;
                 }
 
-                // Check for our custom conflict exception mapping
                 if (evaluateResponse.status === 409) {
                     attempt++;
                     if (attempt >= maxRetries) break;
-
-                    // Exponential backoff pause
                     await new Promise(resolve => setTimeout(resolve, delay));
                     delay *= 1.5;
                 } else {
-                    // If it's something other than 409 (e.g. 400 Bad Request, 500 DB Crash), break immediately
                     throw new Error(`Server returned unexpected code: ${evaluateResponse.status}`);
                 }
             }
 
             if (!evaluateResponse.ok) {
-                throw new Error("Bet propagation timed out via Kafka topic stream.");
+                throw new Error("Bet propagation timed out.");
             }
 
             // 3. Render raw UI updates matching the JSON data contract
@@ -98,13 +141,23 @@
                 resultDiv.innerHTML = `
                 <div class='lose'>❌ Better luck next time!</div>
                 <div class='stats'>
-                    Stake: $${parseFloat(randomStake).toFixed(2)} |
+                    Stake: $${parseFloat(randomStake).toFixed(2)}<br>
                     Pool Balance: $${resultJson.remainingPoolBalance.toFixed(2)}
                 </div>`;
             }
 
         } catch (error) {
             resultDiv.innerHTML = `<div class='lose' style='color: #ffa726;'>⚠️ Error: ${error.message}</div>`;
+        }
+    }
+
+    // Listener 1: Mobile Button click/tap
+    document.getElementById('triggerBet').addEventListener('click', triggerWager);
+
+    // Listener 2: Desktop Spacebar fallback
+    document.body.addEventListener('keyup', function(event) {
+        if (event.key === ' ' && event.target.tagName !== 'INPUT') {
+            triggerWager();
         }
     });
 </script>
