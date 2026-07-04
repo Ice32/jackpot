@@ -14,9 +14,14 @@ Before starting, ensure you have the following installed:
 ---
 
 ## 🚀 How to Run the Application
-
-### 1. Configure the Infrastructure (Kafka Setup)
-Ensure you have Docker/OrbStack installed, spin up Kafka brokers by running this command in your project root:
+Ensure you have Docker/OrbStack installed and then run one of the following commands in your project root:
+### Running the whole stack
+To spin up both the infrastructure and the compiled Java backend inside Docker simultaneously, explicitly pass the application profile:
+> ```bash
+> docker compose --profile app up --build -d
+> ```
+### Running app separately
+If no profile is passed, running `docker compose up` only initializes the infrastructure layer (Kafka cluster). This allows you to easily run and debug the Spring Boot backend service separately inside an IDE.
 ```bash
 docker-compose up -d
 ```

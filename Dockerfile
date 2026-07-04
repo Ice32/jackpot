@@ -1,5 +1,5 @@
 # Stage 1: Build the JAR file
-FROM maven:3.9.6-eclipse-temurin-25 AS build
+FROM maven:3-eclipse-temurin-25 AS build
 WORKDIR /app
 COPY pom.xml .
 # Download dependencies to cache them
