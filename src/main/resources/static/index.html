@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Jackpot Live Demo</title>
+    <style>
+        body { font-family: system-ui, sans-serif; text-align: center; padding-top: 50px; background: #121212; color: white; }
+        .box { border: 2px dashed #444; padding: 40px; max-width: 450px; margin: 0 auto; border-radius: 8px; }
+        .win { color: #4cdf87; font-weight: bold; font-size: 1.5rem; }
+        .lose { color: #ff5252; font-size: 1.2rem; }
+        .stats { color: #bbb; font-size: 0.9rem; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<h1>🏆 Sporty Jackpot Demo</h1>
+<p>Press the <strong>SPACEBAR</strong> to hit the actual REST API endpoints.</p>
+
+<div class="box">
+    <div id="result">
+        <p style="color: #888;">Waiting for spacebar click...</p>
+    </div>
+</div>
+
+<script>
+    document.body.addEventListener('keyup', async function(event) {
+        if (event.key !== ' ' || event.target.tagName === 'INPUT') return;
+
+        const resultDiv = document.getElementById('result');
+        resultDiv.innerHTML = '<p style="color: #888;">Processing wager...</p>';
+
+        const mockBetId = "DEMO-" + Math.random().toString(36).substring(2, 10).toUpperCase();
+        const randomStake = (Math.random() * (200.0 - 100.0) + 100.0).toFixed(2);
+        const targetJackpotId = "JACKPOT-123";
+
+        const payload = {
+            betId: mockBetId,
+            jackpotId: targetJackpotId,
+            userId: "USER-UI-DEMO",
+            betAmount: parseFloat(randomStake)
+        };
+
+        try {
+            // 1. Fire Async Pipeline: Publish bet to Kafka
+            await fetch('/api/v1/bets/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            // 2. Poll the evaluate endpoint with an exponential backoff retry mechanism
+            const maxRetries = 5;
+            let attempt = 0;
+            let delay = 30; // start with a tight 30ms check
+            let evaluateResponse;
+            let resultJson;
+
+            while (attempt < maxRetries) {
+                evaluateResponse = await fetch('/api/v1/bets/evaluate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (evaluateResponse.ok) {
+                    resultJson = await evaluateResponse.json();
+                    break;
+                }
+
+                // Check for our custom conflict exception mapping
+                if (evaluateResponse.status === 409) {
+                    attempt++;
+                    if (attempt >= maxRetries) break;
+
+                    // Exponential backoff pause
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 1.5;
+                } else {
+                    // If it's something other than 409 (e.g. 400 Bad Request, 500 DB Crash), break immediately
+                    throw new Error(`Server returned unexpected code: ${evaluateResponse.status}`);
+                }
+            }
+
+            if (!evaluateResponse.ok) {
+                throw new Error("Bet propagation timed out via Kafka topic stream.");
+            }
+
+            // 3. Render raw UI updates matching the JSON data contract
+            if (resultJson.won) {
+                resultDiv.innerHTML = `
+                <div class='win'>🎉 YOU WON THE JACKPOT!</div>
+                <div class='stats'>
+                    Payout Amount: $${resultJson.payoutAmount.toFixed(2)}
+                </div>`;
+            } else {
+                resultDiv.innerHTML = `
+                <div class='lose'>❌ Better luck next time!</div>
+                <div class='stats'>
+                    Stake: $${parseFloat(randomStake).toFixed(2)} |
+                    Pool Balance: $${resultJson.remainingPoolBalance.toFixed(2)}
+                </div>`;
+            }
+
+        } catch (error) {
+            resultDiv.innerHTML = `<div class='lose' style='color: #ffa726;'>⚠️ Error: ${error.message}</div>`;
+        }
+    });
+</script>
+
+</body>
+</html>

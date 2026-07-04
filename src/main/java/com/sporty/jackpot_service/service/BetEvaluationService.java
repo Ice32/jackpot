@@ -2,7 +2,10 @@ package com.sporty.jackpot_service.service;
 
 import com.sporty.jackpot_service.dto.EvaluateBetRequest;
 import com.sporty.jackpot_service.dto.EvaluationResult;
+import com.sporty.jackpot_service.exception.BetNotProcessedException;
 import com.sporty.jackpot_service.model.Jackpot;
+import com.sporty.jackpot_service.model.JackpotContribution;
+import com.sporty.jackpot_service.repository.JackpotContributionRepository;
 import com.sporty.jackpot_service.repository.JackpotRepository;
 import com.sporty.jackpot_service.service.reward.RewardStrategy;
 import lombok.RequiredArgsConstructor;
@@ -16,18 +19,19 @@ import java.math.BigDecimal;
 public class BetEvaluationService {
 
     private final JackpotRepository jackpotRepository;
+    private final JackpotContributionRepository contributionRepository;
     private final JackpotStrategyFactory strategyFactory;
 
     @Transactional
     public EvaluationResult evaluateBet(EvaluateBetRequest payload) {
-        // 1. Fetch jackpot with a pessimistic write lock to handle concurrency safely
-        Jackpot jackpot = jackpotRepository.findByJackpotIdWithWriteLock(payload.jackpotId())
-                .orElseThrow(() -> new IllegalArgumentException("Jackpot not found for ID: " + payload.jackpotId()));
+        JackpotContribution contribution = contributionRepository.findByBetId(payload.betId())
+                .orElseThrow(() -> new BetNotProcessedException(
+                        "Evaluation rejected: Bet ID " + payload.betId() + " does not exist or has not been processed yet."));
+        Jackpot jackpot = jackpotRepository.findByJackpotIdWithWriteLock(contribution.getJackpotId())
+                .orElseThrow(() -> new IllegalArgumentException("Jackpot not found for ID: " + contribution.getJackpotId()));
 
-        // 2. Resolve the reward strategy via the factory
         RewardStrategy rewardStrategy = strategyFactory.getRewardStrategy(jackpot.getRewardStrategy());
 
-        // 3. Evaluate if the bet is a winner
         boolean won = rewardStrategy.evaluateWin(jackpot.getCurrentBalance());
 
         BigDecimal payoutAmount = BigDecimal.ZERO;

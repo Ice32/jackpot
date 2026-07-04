@@ -4,6 +4,7 @@ import com.sporty.jackpot_service.IntegrationTest;
 import com.sporty.jackpot_service.dto.EvaluationResult;
 import com.sporty.jackpot_service.dto.request.EvaluateBetRequestTestBuilder;
 import com.sporty.jackpot_service.dto.request.SubmitBetRequestTestBuilder;
+import com.sporty.jackpot_service.model.JackpotContributionTestBuilder;
 import com.sporty.jackpot_service.model.JackpotTestBuilder;
 import com.sporty.jackpot_service.repository.JackpotContributionRepository;
 import com.sporty.jackpot_service.repository.JackpotRepository;
@@ -17,6 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -166,6 +168,16 @@ class BetControllerIntegrationTest {
         assertThat(updatedJackpot.getCurrentBalance()).isEqualByComparingTo(initialBalance.add(expectedContribution));
     }
 
+    @Test
+    void evaluateBet_NonExistentBet_400() throws Exception {
+        var evaluationRequest = new EvaluateBetRequestTestBuilder(UUID.randomUUID().toString()).build();
+
+        mvc.perform(post("/api/v1/bets/evaluate")
+                        .content(mapper.writeValueAsString(evaluationRequest))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is4xxClientError());
+    }
+
     @Nested
     @IntegrationTest
     @SpringBootTest(properties = {
@@ -185,17 +197,20 @@ class BetControllerIntegrationTest {
                     .baseAmount(jackpotBaseBalance)
                     .currentBalance(initialJackpotBalance)
                     .build());
-            var betPayload = new EvaluateBetRequestTestBuilder(jackpot.getJackpotId()).build();
+            var jackpotContribution = jackpotContributionRepository.save(
+                    new JackpotContributionTestBuilder(jackpot.getJackpotId()).build()
+            );
+            var evaluationRequest = new EvaluateBetRequestTestBuilder(jackpotContribution).build();
 
             var responseAsString = mvc.perform(post("/api/v1/bets/evaluate")
-                            .content(mapper.writeValueAsString(betPayload))
+                            .content(mapper.writeValueAsString(evaluationRequest))
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
 
             EvaluationResult result = mapper.readValue(responseAsString, EvaluationResult.class);
             assertThat(result.won()).isTrue();
-            assertThat(result.betId()).isEqualTo(betPayload.betId());
+            assertThat(result.betId()).isEqualTo(evaluationRequest.betId());
             assertThat(result.remainingPoolBalance()).isEqualByComparingTo(jackpotBaseBalance);
             assertThat(result.payoutAmount()).isEqualByComparingTo(initialJackpotBalance);
         }
@@ -208,17 +223,20 @@ class BetControllerIntegrationTest {
                     .baseAmount(jackpotBaseBalance)
                     .currentBalance(initialJackpotBalance)
                     .build());
-            var betPayload = new EvaluateBetRequestTestBuilder(jackpot.getJackpotId()).build();
+            var jackpotContribution = jackpotContributionRepository.save(
+                    new JackpotContributionTestBuilder(jackpot.getJackpotId()).build()
+            );
+            var evaluationRequest = new EvaluateBetRequestTestBuilder(jackpotContribution).build();
 
             var responseAsString = mvc.perform(post("/api/v1/bets/evaluate")
-                            .content(mapper.writeValueAsString(betPayload))
+                            .content(mapper.writeValueAsString(evaluationRequest))
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
 
             EvaluationResult result = mapper.readValue(responseAsString, EvaluationResult.class);
             assertThat(result.won()).isTrue();
-            assertThat(result.betId()).isEqualTo(betPayload.betId());
+            assertThat(result.betId()).isEqualTo(evaluationRequest.betId());
             assertThat(result.remainingPoolBalance()).isEqualByComparingTo(jackpotBaseBalance);
             assertThat(result.payoutAmount()).isEqualByComparingTo(initialJackpotBalance);
         }
@@ -231,17 +249,20 @@ class BetControllerIntegrationTest {
                     .baseAmount(jackpotBaseBalance)
                     .currentBalance(initialJackpotBalance)
                     .build());
-            var betPayload = new EvaluateBetRequestTestBuilder(jackpot.getJackpotId()).build();
+            var jackpotContribution = jackpotContributionRepository.save(
+                    new JackpotContributionTestBuilder(jackpot.getJackpotId()).build()
+            );
+            var evaluationRequest = new EvaluateBetRequestTestBuilder(jackpotContribution).build();
 
             var responseAsString = mvc.perform(post("/api/v1/bets/evaluate")
-                            .content(mapper.writeValueAsString(betPayload))
+                            .content(mapper.writeValueAsString(evaluationRequest))
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
 
             EvaluationResult result = mapper.readValue(responseAsString, EvaluationResult.class);
             assertThat(result.won()).isFalse();
-            assertThat(result.betId()).isEqualTo(betPayload.betId());
+            assertThat(result.betId()).isEqualTo(evaluationRequest.betId());
             assertThat(result.remainingPoolBalance()).isEqualByComparingTo(initialJackpotBalance);
             assertThat(result.payoutAmount()).isEqualByComparingTo(BigDecimal.ZERO);
         }
@@ -264,17 +285,20 @@ class BetControllerIntegrationTest {
             var jackpot = jackpotRepository.save(new JackpotTestBuilder()
                     .currentBalance(initialJackpotBalance)
                     .build());
-            var betPayload = new EvaluateBetRequestTestBuilder(jackpot.getJackpotId()).build();
+            var jackpotContribution = jackpotContributionRepository.save(
+                    new JackpotContributionTestBuilder(jackpot.getJackpotId()).build()
+            );
+            var evaluationRequest = new EvaluateBetRequestTestBuilder(jackpotContribution).build();
 
             var responseAsString = mvc.perform(post("/api/v1/bets/evaluate")
-                            .content(mapper.writeValueAsString(betPayload))
+                            .content(mapper.writeValueAsString(evaluationRequest))
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
 
             EvaluationResult result = mapper.readValue(responseAsString, EvaluationResult.class);
             assertThat(result.won()).isFalse();
-            assertThat(result.betId()).isEqualTo(betPayload.betId());
+            assertThat(result.betId()).isEqualTo(evaluationRequest.betId());
             assertThat(result.remainingPoolBalance()).isEqualByComparingTo(initialJackpotBalance);
             assertThat(result.payoutAmount()).isEqualByComparingTo(BigDecimal.ZERO);
         }
@@ -287,17 +311,20 @@ class BetControllerIntegrationTest {
                     .baseAmount(jackpotBaseBalance)
                     .currentBalance(initialJackpotBalance)
                     .build());
-            var betPayload = new EvaluateBetRequestTestBuilder(jackpot.getJackpotId()).build();
+            var jackpotContribution = jackpotContributionRepository.save(
+                    new JackpotContributionTestBuilder(jackpot.getJackpotId()).build()
+            );
+            var evaluationRequest = new EvaluateBetRequestTestBuilder(jackpotContribution).build();
 
             var responseAsString = mvc.perform(post("/api/v1/bets/evaluate")
-                            .content(mapper.writeValueAsString(betPayload))
+                            .content(mapper.writeValueAsString(evaluationRequest))
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
 
             EvaluationResult result = mapper.readValue(responseAsString, EvaluationResult.class);
             assertThat(result.won()).isFalse();
-            assertThat(result.betId()).isEqualTo(betPayload.betId());
+            assertThat(result.betId()).isEqualTo(evaluationRequest.betId());
             assertThat(result.remainingPoolBalance()).isEqualByComparingTo(initialJackpotBalance);
             assertThat(result.payoutAmount()).isEqualByComparingTo(BigDecimal.ZERO);
         }

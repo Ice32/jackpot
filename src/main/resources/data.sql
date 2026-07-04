@@ -1,0 +1,2 @@
+INSERT INTO jackpot (jackpot_id, name, current_balance, base_amount, contribution_strategy, reward_strategy, version)
+VALUES ('JACKPOT-123', 'Mega Progressive Jackpot', 1000.00, 1000.00, 'VARIABLE', 'VARIABLE', 0);

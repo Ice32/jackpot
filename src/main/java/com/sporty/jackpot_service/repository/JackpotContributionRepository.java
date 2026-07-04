@@ -10,5 +10,7 @@ import java.util.Optional;
 public interface JackpotContributionRepository extends JpaRepository<JackpotContribution, Long> {
     Optional<JackpotContribution> findByJackpotId(String jackpotId);
 
+    Optional<JackpotContribution> findByBetId(String betId);
+
     boolean existsByBetId(String betId);
 }

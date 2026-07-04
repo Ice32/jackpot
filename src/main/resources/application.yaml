@@ -1,6 +1,20 @@
 spring:
   application:
     name: jackpot-service
+  datasource:
+    url: jdbc:h2:mem:jackpotdb;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true # Let's enable the console so you can inspect data
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    defer-datasource-initialization: true # Ensures schema is ready before data.sql runs
 logging:
   level:
     org:
@@ -22,8 +36,8 @@ jackpot:
       fixed:
         win-chance: 0.5           # Flat 0.5% chance to win on any bet
       variable:
-        base-chance: 0.1
+        base-chance: 5
         tier1-threshold: 5000.00
-        tier1-chance: 1.0
+        tier1-chance: 10
         tier2-threshold: 10000.00
-        tier2-chance: 2.0
+        tier2-chance: 20

@@ -5,7 +5,6 @@ import jakarta.validation.constraints.NotBlank;
 
 public record EvaluateBetRequest(
         @NotBlank String betId,
-        @NotBlank String jackpotId,
         @NotBlank String userId
 ) {
 }
