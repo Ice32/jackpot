@@ -77,6 +77,12 @@
             transform: scale(0.98);
             background: #3cbe71;
         }
+
+        .btn:disabled {
+            cursor: wait;
+            opacity: 0.7;
+            transform: none;
+        }
         .win { color: #4cdf87; font-weight: bold; font-size: 1.4rem; }
         .lose { color: #ff5252; font-size: 1.2rem; }
         .stats { color: #bbb; font-size: 0.9rem; margin-top: 10px; line-height: 1.4; }
@@ -177,9 +183,11 @@
 
     const usernameInput = document.getElementById('usernameInput');
     const jackpotSelect = document.getElementById('jackpotSelect');
+    const triggerBetButton = document.getElementById('triggerBet');
 
     // In-memory map to store jackpotId -> jackpotName mapping
     let jackpotMap = {};
+    let wagerInProgress = false;
 
     const savedName = localStorage.getItem('jackpot_demo_username');
     if (savedName) {
@@ -271,6 +279,10 @@
     }
 
     async function triggerWager() {
+        if (wagerInProgress) {
+            return;
+        }
+
         const selectedJackpotId = jackpotSelect.value;
         if (!selectedJackpotId) {
             alert("Please wait until jackpot records finish loading from the server.");
@@ -278,6 +290,9 @@
         }
 
         const resultDiv = document.getElementById('result');
+        wagerInProgress = true;
+        triggerBetButton.disabled = true;
+        triggerBetButton.textContent = 'Processing...';
         resultDiv.innerHTML = '<p style="color: #888;">Processing wager...</p>';
 
         const mockBetId = "BETID-" + Math.random().toString(36).substring(2, 10).toUpperCase();
@@ -294,11 +309,14 @@
 
         try {
             // 1. Submit bet to ingestion pipeline
-            await fetch('/api/v1/bets/submit', {
+            const submitResponse = await fetch('/api/v1/bets/submit', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
+            if (!submitResponse.ok) {
+                throw new Error(`Bet submission failed: ${submitResponse.status}`);
+            }
 
             await new Promise(resolve => setTimeout(resolve, 50));
 
@@ -342,6 +360,7 @@
                 <div class='stats'>
                     Target: <strong>${selectedJackpotName}</strong><br>
                     Payout Amount: $${resultJson.payoutAmount.toFixed(2)}<br>
+                    Bet ID: ${resultJson.betId}<br>
                     <small style="color:#555">Winner: ${currentUserId}</small>
                 </div>`;
             } else {
@@ -351,6 +370,7 @@
                     Target: <strong>${selectedJackpotName}</strong><br>
                     Stake: $${parseFloat(randomStake).toFixed(2)}<br>
                     Pool Balance: $${resultJson.remainingPoolBalance.toFixed(2)}<br>
+                    Bet ID: ${resultJson.betId}<br>
                     <small style="color:#555">Player: ${currentUserId}</small>
                 </div>`;
             }
@@ -360,11 +380,15 @@
 
         } catch (error) {
             resultDiv.innerHTML = `<div class='lose' style='color: #ffa726;'>⚠️ Error: ${error.message}</div>`;
+        } finally {
+            wagerInProgress = false;
+            triggerBetButton.disabled = false;
+            triggerBetButton.textContent = '🎰 Place Bet';
         }
     }
 
     // Event hooks
-    document.getElementById('triggerBet').addEventListener('click', triggerWager);
+    triggerBetButton.addEventListener('click', triggerWager);
 
     document.body.addEventListener('keyup', function(event) {
         if (event.key === ' ' && event.target.tagName !== 'INPUT') {
