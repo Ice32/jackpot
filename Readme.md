@@ -7,7 +7,8 @@ This application manages jackpot pools by processing incoming bets for dynamic p
 ## 🛠️ Prerequisites
 
 Before starting, ensure you have the following installed:
-* **Java 25** or higher
+
+* **Java 21** or higher
 * **Maven 3.8+**
 * **Docker & Docker Compose** (Optional, only if using a live Kafka broker cluster)
 
