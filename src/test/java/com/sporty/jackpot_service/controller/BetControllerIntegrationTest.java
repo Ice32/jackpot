@@ -9,7 +9,6 @@ import com.sporty.jackpot_service.model.JackpotTestBuilder;
 import com.sporty.jackpot_service.repository.JackpotContributionRepository;
 import com.sporty.jackpot_service.repository.JackpotRepository;
 import com.sporty.jackpot_service.repository.JackpotRewardRepository;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -298,7 +297,7 @@ class BetControllerIntegrationTest {
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
 
-            EvaluationResult result = mapper.readValue(responseAsString, EvaluationResult.class);
+            var result = mapper.readValue(responseAsString, EvaluationResult.class);
             assertThat(result.won()).isTrue();
             assertThat(result.betId()).isEqualTo(evaluationRequest.betId());
             assertThat(result.remainingPoolBalance()).isEqualByComparingTo(jackpotBaseBalance);
@@ -353,7 +352,7 @@ class BetControllerIntegrationTest {
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
 
-            EvaluationResult result = mapper.readValue(responseAsString, EvaluationResult.class);
+            var result = mapper.readValue(responseAsString, EvaluationResult.class);
             assertThat(result.won()).isFalse();
             assertThat(result.betId()).isEqualTo(evaluationRequest.betId());
             assertThat(result.remainingPoolBalance()).isEqualByComparingTo(initialJackpotBalance);
@@ -405,7 +404,7 @@ class BetControllerIntegrationTest {
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
 
-            EvaluationResult result = mapper.readValue(responseAsString, EvaluationResult.class);
+            var result = mapper.readValue(responseAsString, EvaluationResult.class);
             assertThat(result.won()).isFalse();
             assertThat(result.betId()).isEqualTo(evaluationRequest.betId());
             assertThat(result.remainingPoolBalance()).isEqualByComparingTo(initialJackpotBalance);
