@@ -211,7 +211,7 @@ class BetControllerIntegrationTest {
         assertThat(result.payoutAmount()).isEqualByComparingTo(initialJackpotBalance);
         var rewardRecord = rewardRepository.findAll().getFirst();
         assertThat(rewardRecord.getBetId()).isEqualTo(evaluationRequest.betId());
-        assertThat(rewardRecord.getUserId()).isEqualTo(evaluationRequest.userId());
+        assertThat(rewardRecord.getUserId()).isEqualTo(jackpotContribution.getUserId());
         assertThat(rewardRecord.getJackpotId()).isEqualTo(jackpot.getJackpotId());
         assertThat(rewardRecord.getJackpotRewardAmount()).isEqualByComparingTo(initialJackpotBalance);
     }

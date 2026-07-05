@@ -45,7 +45,7 @@ public class BetEvaluationService {
 
             JackpotReward rewardRecord = new JackpotReward(
                     payload.betId(),
-                    payload.userId(),
+                    contribution.getUserId(),
                     jackpot.getJackpotId(),
                     payoutAmount
             );

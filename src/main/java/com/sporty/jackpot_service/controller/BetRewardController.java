@@ -11,13 +11,13 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/bets")
+@RequestMapping("/api/v1/bets/rewards")
 @RequiredArgsConstructor
 public class BetRewardController { // only for the UI demo
 
     private final JackpotRewardRepository rewardRepository;
 
-    @GetMapping("/rewards")
+    @GetMapping
     public List<JackpotReward> getRecentRewards() {
         return rewardRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
     }

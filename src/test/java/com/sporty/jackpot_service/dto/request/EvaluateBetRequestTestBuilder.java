@@ -9,7 +9,6 @@ import java.util.UUID;
 @NoArgsConstructor
 public class EvaluateBetRequestTestBuilder {
     private String betId = UUID.randomUUID().toString();
-    private String userId = UUID.randomUUID().toString();
 
     public EvaluateBetRequestTestBuilder(String betId) {
         this.betId = betId;
@@ -20,7 +19,7 @@ public class EvaluateBetRequestTestBuilder {
     }
 
     public EvaluateBetRequest build() {
-        return new EvaluateBetRequest(betId, userId);
+        return new EvaluateBetRequest(betId);
     }
 
 }
