@@ -69,6 +69,40 @@ The in-memory H2 database is initialized with these jackpot records from `src/ma
 
 ---
 
+## 🧱 Architectural Decisions
+
+This implementation uses a state-based Spring Boot service backed by JPA/Hibernate and an in-memory H2 database. The
+current jackpot balance is stored directly on the `jackpot` table, while contribution and reward records are persisted
+as audit-style records containing the required bet, user, jackpot, amount, and creation-time fields.
+
+Kafka is used for the bet-submission path to decouple request acceptance from jackpot contribution processing. The API
+publishes accepted bets to the required `jackpot-bets` topic and returns `202 Accepted`; the consumer then processes
+those events asynchronously and creates the jackpot contribution records.
+
+Contribution and reward behavior is implemented with strategy interfaces and per-jackpot configuration entities. This
+keeps the initially required fixed and variable options open for extension without putting strategy-specific fields
+directly on the `Jackpot` entity.
+
+Concurrency around jackpot balance updates is handled with a pessimistic write lock when loading a jackpot for
+contribution or evaluation. This serializes concurrent updates for the same jackpot pool. The `@Version` column remains
+as an additional persistence-level guard. Duplicate Kafka delivery is handled defensively through unique `betId`
+constraints plus duplicate checks, so the same bet event does not create multiple contribution records.
+
+Foreign keys and indexes are used where they protect core invariants or support common lookups: contribution/reward
+records reference the configured jackpot ID, bet IDs are unique, and jackpot IDs are indexed for contribution and reward
+queries.
+
+An event-sourcing architecture may be a strong fit for this domain. Jackpot balance changes, contributions, reward
+evaluations, wins, resets, and rejected duplicate events are naturally append-only facts. With more time, the service
+could persist these as immutable domain events and derive the current jackpot state from projections. For this 90-minute
+task, I chose a state-based approach because it is faster to implement and easier to inspect through H2 while still
+preserving the key contribution and reward records.
+
+Integration tests use an embedded Kafka broker and H2 database to exercise the real publish/consume flow, persistence
+behavior, and evaluation logic without requiring an external Kafka cluster.
+
+---
+
 ## 🔌 API Usage
 
 ### 1. Publish a bet to Kafka
