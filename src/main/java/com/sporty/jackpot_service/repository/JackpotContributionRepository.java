@@ -15,8 +15,6 @@ public interface JackpotContributionRepository extends JpaRepository<JackpotCont
 
     Optional<JackpotContribution> findByJackpotId(String jackpotId);
 
-    Optional<JackpotContribution> findByBetId(String betId);
-
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT c FROM JackpotContribution c WHERE c.betId = :betId")
     Optional<JackpotContribution> findByBetIdWithWriteLock(@Param("betId") String betId);

@@ -20,7 +20,7 @@ public class JackpotBetProducer {
                     if (exception != null) {
                         log.error("Publishing failed for Bet ID: {}", payload.betId(), exception);
                     } else {
-                        log.info("Successfully appended to partition [{}], offset [{}]",
+                        log.debug("Successfully appended to partition [{}], offset [{}]",
                                 result.getRecordMetadata().partition(),
                                 result.getRecordMetadata().offset());
                     }

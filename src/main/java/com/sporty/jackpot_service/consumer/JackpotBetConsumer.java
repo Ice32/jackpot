@@ -23,10 +23,6 @@ public class JackpotBetConsumer {
     private final JackpotContributionRepository contributionRepository;
     private final JackpotStrategyFactory strategyFactory;
 
-    /**
-     * Listens to the 'jackpot-bets' Kafka topic verbatim from requirements.
-     * Handles payload parsing automatically using the spring-kafka JSON deserializer layout.
-     */
     @KafkaListener(
             topics = "jackpot-bets",
             groupId = "jackpot-contribution-group",
@@ -35,7 +31,7 @@ public class JackpotBetConsumer {
     )
     @Transactional
     public void consumeJackpotBet(SubmitBetRequest payload) {
-        log.info("Received background bet event processing task for Bet ID: {}", payload.betId());
+        log.debug("Received background bet event processing task for Bet ID: {}", payload.betId());
 
         // 1. Idempotency Check: Prevent duplicate ledger processing if Kafka re-delivers the message
         if (contributionRepository.existsByBetId(payload.betId())) {
@@ -53,7 +49,7 @@ public class JackpotBetConsumer {
         JackpotContribution ledgerRecord = jackpot.contribute(payload, strategyFactory);
         contributionRepository.save(ledgerRecord);
 
-        log.info("Successfully updated pool balance tracking and committed ledger for Bet ID: {}. New Balance: {}",
+        log.debug("Successfully updated pool balance tracking and committed ledger for Bet ID: {}. New Balance: {}",
                 payload.betId(), jackpot.getCurrentBalance());
     }
 }

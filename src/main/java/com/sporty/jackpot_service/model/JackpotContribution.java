@@ -1,6 +1,5 @@
 package com.sporty.jackpot_service.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -40,7 +39,6 @@ public class JackpotContribution extends BaseEntity {
             nullable = false,
             foreignKey = @ForeignKey(name = "fk_jackpot_contribution_jackpot")
     )
-    @JsonIgnore
     private Jackpot jackpot;
 
     @Column(name = "stake_amount", precision = 18, scale = 4)
