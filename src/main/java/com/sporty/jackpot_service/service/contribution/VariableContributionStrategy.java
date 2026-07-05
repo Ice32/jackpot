@@ -21,7 +21,12 @@ public class VariableContributionStrategy implements ContributionStrategy {
             return BigDecimal.ZERO;
         }
 
-        VariableContributionConfiguration variableConfiguration = (VariableContributionConfiguration) configuration;
+        BigDecimal calculatedRate = calculateContributionRate(currentPoolBalance, (VariableContributionConfiguration) configuration);
+
+        return stakeAmount.multiply(calculatedRate);
+    }
+
+    private static BigDecimal calculateContributionRate(BigDecimal currentPoolBalance, VariableContributionConfiguration variableConfiguration) {
         BigDecimal safePoolBalance = (currentPoolBalance == null) ? BigDecimal.ZERO : currentPoolBalance;
 
         // 1. Calculate how many decay steps the pool has advanced
@@ -31,12 +36,11 @@ public class VariableContributionStrategy implements ContributionStrategy {
         // 2. Calculate the total reduction: steps * decayRate
         BigDecimal totalDecay = steps.multiply(variableConfiguration.getDecayRate());
 
-        // 3. Subtract decay from initial rate, but ensure it never falls below the floor rate
+        // 3. Subtract decay from the initial rate
         BigDecimal calculatedRate = variableConfiguration.getInitialRate().subtract(totalDecay);
-        BigDecimal finalRate = calculatedRate.max(variableConfiguration.getFloorRate());
 
-        // 4. Calculate contribution as a percentage of the Bet Amount
-        return stakeAmount.multiply(finalRate);
+        // 4. Ensure it never falls below the floor rate
+        return calculatedRate.max(variableConfiguration.getFloorRate());
     }
 
     @Override

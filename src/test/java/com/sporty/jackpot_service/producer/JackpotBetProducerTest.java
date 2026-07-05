@@ -23,7 +23,7 @@ class JackpotBetProducerTest {
     private JackpotBetProducer producer;
 
     @Test
-    void publishBet_WhenSendCannotBeQueued_ThrowsSubmissionUnavailable() {
+    void publishBet_SendCannotBeQueued_ThrowsSubmissionUnavailable() {
         var payload = new SubmitBetRequest("bet-1", "jackpot-1", "user-1", BigDecimal.TEN);
         var sendFailure = new IllegalStateException("producer unavailable");
 

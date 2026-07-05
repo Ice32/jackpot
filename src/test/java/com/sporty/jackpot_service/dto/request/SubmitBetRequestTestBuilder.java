@@ -25,5 +25,4 @@ public class SubmitBetRequestTestBuilder {
     public SubmitBetRequest build() {
         return new SubmitBetRequest(betId, jackpotId, userId, betAmount);
     }
-
 }

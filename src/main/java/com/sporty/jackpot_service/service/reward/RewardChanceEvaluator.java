@@ -5,6 +5,9 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.util.concurrent.ThreadLocalRandom;
 
+/**
+ * Centralize chance evaluation logic and make reward strategies unit-testable
+ */
 @Component
 public class RewardChanceEvaluator {
 

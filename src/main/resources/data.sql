@@ -1,4 +1,6 @@
 -- @formatter:off
+-- Seed data for the UI demo
+
 INSERT INTO contribution_configuration (
     id, strategy_type, rate, initial_rate, decay_step, decay_rate, floor_rate
 )

@@ -21,5 +21,4 @@ public class EvaluateBetRequestTestBuilder {
     public EvaluateBetRequest build() {
         return new EvaluateBetRequest(betId);
     }
-
 }

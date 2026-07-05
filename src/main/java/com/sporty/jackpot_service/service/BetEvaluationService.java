@@ -27,6 +27,7 @@ public class BetEvaluationService {
 
     @Transactional
     public EvaluationResult evaluateBet(EvaluateBetRequest payload) {
+        // read jackpotId in a separate, non-locking query to prevent deadlocks due to the order of locks
         String jackpotId = contributionRepository.findJackpotIdByBetId(payload.betId())
                 .orElseThrow(() -> new ProcessingConflictException(
                         "Evaluation rejected: Bet ID " + payload.betId() + " does not exist or has not been processed yet."));
@@ -37,6 +38,7 @@ public class BetEvaluationService {
         JackpotContribution contribution = contributionRepository.findByBetIdWithWriteLock(payload.betId())
                 .orElseThrow(() -> new ProcessingConflictException(
                         "Evaluation rejected: Bet ID " + payload.betId() + " does not exist or has not been processed yet."));
+
         if (contribution.isEvaluated()) {
             throw new ProcessingConflictException("Evaluation rejected: Bet ID " + payload.betId() + " has already been evaluated.");
         }
@@ -46,8 +48,6 @@ public class BetEvaluationService {
         }
 
         Optional<JackpotReward> rewardOptional = jackpot.evaluate(contribution, strategyFactory);
-
-        // Save the updated state (explicit call, though managed by Hibernate transaction)
         rewardOptional.ifPresent(rewardRepository::save);
 
         return new EvaluationResult(
