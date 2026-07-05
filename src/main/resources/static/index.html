@@ -203,7 +203,7 @@
     // Dynamic fetch to initialize and refresh the selection dropdown options
     async function loadJackpotPools() {
         try {
-            const response = await fetch('/api/v1/bets/pools');
+            const response = await fetch('/api/v1/jackpots');
             if (!response.ok) return;
 
             const pools = await response.json();

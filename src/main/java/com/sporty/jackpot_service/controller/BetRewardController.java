@@ -1,6 +1,6 @@
 package com.sporty.jackpot_service.controller;
 
-import com.sporty.jackpot_service.model.JackpotReward;
+import com.sporty.jackpot_service.dto.JackpotRewardResponse;
 import com.sporty.jackpot_service.repository.JackpotRewardRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -18,7 +18,14 @@ public class BetRewardController { // only for the UI demo
     private final JackpotRewardRepository rewardRepository;
 
     @GetMapping
-    public List<JackpotReward> getRecentRewards() {
-        return rewardRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
+    public List<JackpotRewardResponse> getRecentRewards() {
+        return rewardRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt")).stream()
+                .map(reward -> new JackpotRewardResponse(
+                        reward.getBetId(),
+                        reward.getUserId(),
+                        reward.getJackpotId(),
+                        reward.getJackpotRewardAmount()
+                ))
+                .toList();
     }
 }

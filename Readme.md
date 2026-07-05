@@ -163,7 +163,7 @@ This returns the persisted jackpot reward records, ordered newest first. It is m
 ### 4. Inspect jackpot state
 
 ```bash
-curl http://localhost:8080/api/v1/bets/pools
+curl http://localhost:8080/api/v1/jackpots
 ```
 
 This returns the current jackpot records and balances.

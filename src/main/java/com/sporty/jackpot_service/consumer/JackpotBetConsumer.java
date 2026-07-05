@@ -2,6 +2,7 @@ package com.sporty.jackpot_service.consumer;
 
 import com.sporty.jackpot_service.dto.SubmitBetRequest;
 import com.sporty.jackpot_service.model.Jackpot;
+import com.sporty.jackpot_service.model.JackpotContribution;
 import com.sporty.jackpot_service.repository.JackpotContributionRepository;
 import com.sporty.jackpot_service.repository.JackpotRepository;
 import com.sporty.jackpot_service.service.JackpotStrategyFactory;
@@ -49,7 +50,7 @@ public class JackpotBetConsumer {
 
 
         // 3. Delegate to the core business logic
-        var ledgerRecord = jackpot.contribute(payload, strategyFactory);
+        JackpotContribution ledgerRecord = jackpot.contribute(payload, strategyFactory);
         contributionRepository.save(ledgerRecord);
 
         log.info("Successfully updated pool balance tracking and committed ledger for Bet ID: {}. New Balance: {}",

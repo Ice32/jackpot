@@ -248,168 +248,168 @@ class BetControllerIntegrationTest {
         assertThat(rewardRepository.count()).isEqualTo(1);
     }
 
-        @Test
-        void evaluateBet_FixedRewardChanceJackpotAndChance100_Won() throws Exception {
-            var jackpotBaseBalance = new BigDecimal("100");
-            var initialJackpotBalance = new BigDecimal("100");
-            var jackpot = jackpotRepository.save(JackpotTestBuilder.fixedRewardChance()
-                    .baseAmount(jackpotBaseBalance)
-                    .currentBalance(initialJackpotBalance)
-                    .fixedRewardWinChance(new BigDecimal("100"))
-                    .build());
-            var jackpotContribution = jackpotContributionRepository.save(
-                    new JackpotContributionTestBuilder(jackpot.getJackpotId()).build()
-            );
-            var evaluationRequest = new EvaluateBetRequestTestBuilder(jackpotContribution).build();
+    @Test
+    void evaluateBet_FixedRewardChanceJackpotAndChance100_Won() throws Exception {
+        var jackpotBaseBalance = new BigDecimal("100");
+        var initialJackpotBalance = new BigDecimal("100");
+        var jackpot = jackpotRepository.save(JackpotTestBuilder.fixedRewardChance()
+                .baseAmount(jackpotBaseBalance)
+                .currentBalance(initialJackpotBalance)
+                .fixedRewardWinChance(new BigDecimal("100"))
+                .build());
+        var jackpotContribution = jackpotContributionRepository.save(
+                new JackpotContributionTestBuilder(jackpot.getJackpotId()).build()
+        );
+        var evaluationRequest = new EvaluateBetRequestTestBuilder(jackpotContribution).build();
 
-            var responseAsString = mvc.perform(post("/api/v1/bets/evaluate")
-                            .content(mapper.writeValueAsString(evaluationRequest))
-                            .contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk())
-                    .andReturn().getResponse().getContentAsString();
+        var responseAsString = mvc.perform(post("/api/v1/bets/evaluate")
+                        .content(mapper.writeValueAsString(evaluationRequest))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
 
-            EvaluationResult result = mapper.readValue(responseAsString, EvaluationResult.class);
-            assertThat(result.won()).isTrue();
-            assertThat(result.betId()).isEqualTo(evaluationRequest.betId());
-            assertThat(result.remainingPoolBalance()).isEqualByComparingTo(jackpotBaseBalance);
-            assertThat(result.payoutAmount()).isEqualByComparingTo(initialJackpotBalance);
-            assertThat(rewardRepository.count()).isEqualTo(1);
-        }
+        EvaluationResult result = mapper.readValue(responseAsString, EvaluationResult.class);
+        assertThat(result.won()).isTrue();
+        assertThat(result.betId()).isEqualTo(evaluationRequest.betId());
+        assertThat(result.remainingPoolBalance()).isEqualByComparingTo(jackpotBaseBalance);
+        assertThat(result.payoutAmount()).isEqualByComparingTo(initialJackpotBalance);
+        assertThat(rewardRepository.count()).isEqualTo(1);
+    }
 
-        @Test
-        void evaluateBet_VariableRewardChanceJackpotAndChanceForThreshold100_Won() throws Exception {
-            var jackpotBaseBalance = new BigDecimal("100");
-            var initialJackpotBalance = VARIABLE_REWARD_TIER1_THRESHOLD.add(BigDecimal.ONE);
-            var jackpot = jackpotRepository.save(JackpotTestBuilder.variableRewardChance()
-                    .baseAmount(jackpotBaseBalance)
-                    .currentBalance(initialJackpotBalance)
-                    .variableRewardBaseChance(BigDecimal.ZERO)
-                    .variableRewardTier1Chance(new BigDecimal("100"))
-                    .build());
-            var jackpotContribution = jackpotContributionRepository.save(
-                    new JackpotContributionTestBuilder(jackpot.getJackpotId()).build()
-            );
-            var evaluationRequest = new EvaluateBetRequestTestBuilder(jackpotContribution).build();
+    @Test
+    void evaluateBet_VariableRewardChanceJackpotAndChanceForThreshold100_Won() throws Exception {
+        var jackpotBaseBalance = new BigDecimal("100");
+        var initialJackpotBalance = VARIABLE_REWARD_TIER1_THRESHOLD.add(BigDecimal.ONE);
+        var jackpot = jackpotRepository.save(JackpotTestBuilder.variableRewardChance()
+                .baseAmount(jackpotBaseBalance)
+                .currentBalance(initialJackpotBalance)
+                .variableRewardBaseChance(BigDecimal.ZERO)
+                .variableRewardTier1Chance(new BigDecimal("100"))
+                .build());
+        var jackpotContribution = jackpotContributionRepository.save(
+                new JackpotContributionTestBuilder(jackpot.getJackpotId()).build()
+        );
+        var evaluationRequest = new EvaluateBetRequestTestBuilder(jackpotContribution).build();
 
-            var responseAsString = mvc.perform(post("/api/v1/bets/evaluate")
-                            .content(mapper.writeValueAsString(evaluationRequest))
-                            .contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk())
-                    .andReturn().getResponse().getContentAsString();
+        var responseAsString = mvc.perform(post("/api/v1/bets/evaluate")
+                        .content(mapper.writeValueAsString(evaluationRequest))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
 
-            var result = mapper.readValue(responseAsString, EvaluationResult.class);
-            assertThat(result.won()).isTrue();
-            assertThat(result.betId()).isEqualTo(evaluationRequest.betId());
-            assertThat(result.remainingPoolBalance()).isEqualByComparingTo(jackpotBaseBalance);
-            assertThat(result.payoutAmount()).isEqualByComparingTo(initialJackpotBalance);
-            assertThat(rewardRepository.count()).isEqualTo(1);
-        }
+        var result = mapper.readValue(responseAsString, EvaluationResult.class);
+        assertThat(result.won()).isTrue();
+        assertThat(result.betId()).isEqualTo(evaluationRequest.betId());
+        assertThat(result.remainingPoolBalance()).isEqualByComparingTo(jackpotBaseBalance);
+        assertThat(result.payoutAmount()).isEqualByComparingTo(initialJackpotBalance);
+        assertThat(rewardRepository.count()).isEqualTo(1);
+    }
 
-        @Test
-        void evaluateBet_VariableRewardChanceJackpotAndNotOverSureWinThreshold_Lost() throws Exception {
-            var jackpotBaseBalance = new BigDecimal("100");
-            var initialJackpotBalance = VARIABLE_REWARD_TIER1_THRESHOLD.subtract(BigDecimal.ONE);
-            var jackpot = jackpotRepository.save(JackpotTestBuilder.variableRewardChance()
-                    .baseAmount(jackpotBaseBalance)
-                    .currentBalance(initialJackpotBalance)
-                    .variableRewardBaseChance(BigDecimal.ZERO)
-                    .variableRewardTier1Chance(new BigDecimal("100"))
-                    .build());
-            var jackpotContribution = jackpotContributionRepository.save(
-                    new JackpotContributionTestBuilder(jackpot.getJackpotId()).build()
-            );
-            var evaluationRequest = new EvaluateBetRequestTestBuilder(jackpotContribution).build();
+    @Test
+    void evaluateBet_VariableRewardChanceJackpotAndNotOverSureWinThreshold_Lost() throws Exception {
+        var jackpotBaseBalance = new BigDecimal("100");
+        var initialJackpotBalance = VARIABLE_REWARD_TIER1_THRESHOLD.subtract(BigDecimal.ONE);
+        var jackpot = jackpotRepository.save(JackpotTestBuilder.variableRewardChance()
+                .baseAmount(jackpotBaseBalance)
+                .currentBalance(initialJackpotBalance)
+                .variableRewardBaseChance(BigDecimal.ZERO)
+                .variableRewardTier1Chance(new BigDecimal("100"))
+                .build());
+        var jackpotContribution = jackpotContributionRepository.save(
+                new JackpotContributionTestBuilder(jackpot.getJackpotId()).build()
+        );
+        var evaluationRequest = new EvaluateBetRequestTestBuilder(jackpotContribution).build();
 
-            var responseAsString = mvc.perform(post("/api/v1/bets/evaluate")
-                            .content(mapper.writeValueAsString(evaluationRequest))
-                            .contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk())
-                    .andReturn().getResponse().getContentAsString();
+        var responseAsString = mvc.perform(post("/api/v1/bets/evaluate")
+                        .content(mapper.writeValueAsString(evaluationRequest))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
 
-            EvaluationResult result = mapper.readValue(responseAsString, EvaluationResult.class);
-            assertThat(result.won()).isFalse();
-            assertThat(result.betId()).isEqualTo(evaluationRequest.betId());
-            assertThat(result.remainingPoolBalance()).isEqualByComparingTo(initialJackpotBalance);
-            assertThat(result.payoutAmount()).isEqualByComparingTo(BigDecimal.ZERO);
-            assertThat(rewardRepository.count()).isZero();
-        }
+        EvaluationResult result = mapper.readValue(responseAsString, EvaluationResult.class);
+        assertThat(result.won()).isFalse();
+        assertThat(result.betId()).isEqualTo(evaluationRequest.betId());
+        assertThat(result.remainingPoolBalance()).isEqualByComparingTo(initialJackpotBalance);
+        assertThat(result.payoutAmount()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(rewardRepository.count()).isZero();
+    }
 
-        @Test
-        void evaluateBet_FixedRewardChanceJackpotAndChance0_Lost() throws Exception {
-            var initialJackpotBalance = new BigDecimal("100");
-            var jackpot = jackpotRepository.save(new JackpotTestBuilder()
-                    .currentBalance(initialJackpotBalance)
-                    .fixedRewardWinChance(BigDecimal.ZERO)
-                    .build());
-            var jackpotContribution = jackpotContributionRepository.save(
-                    new JackpotContributionTestBuilder(jackpot.getJackpotId()).build()
-            );
-            var evaluationRequest = new EvaluateBetRequestTestBuilder(jackpotContribution).build();
+    @Test
+    void evaluateBet_FixedRewardChanceJackpotAndChance0_Lost() throws Exception {
+        var initialJackpotBalance = new BigDecimal("100");
+        var jackpot = jackpotRepository.save(new JackpotTestBuilder()
+                .currentBalance(initialJackpotBalance)
+                .fixedRewardWinChance(BigDecimal.ZERO)
+                .build());
+        var jackpotContribution = jackpotContributionRepository.save(
+                new JackpotContributionTestBuilder(jackpot.getJackpotId()).build()
+        );
+        var evaluationRequest = new EvaluateBetRequestTestBuilder(jackpotContribution).build();
 
-            var responseAsString = mvc.perform(post("/api/v1/bets/evaluate")
-                            .content(mapper.writeValueAsString(evaluationRequest))
-                            .contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk())
-                    .andReturn().getResponse().getContentAsString();
+        var responseAsString = mvc.perform(post("/api/v1/bets/evaluate")
+                        .content(mapper.writeValueAsString(evaluationRequest))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
 
-            var result = mapper.readValue(responseAsString, EvaluationResult.class);
-            assertThat(result.won()).isFalse();
-            assertThat(result.betId()).isEqualTo(evaluationRequest.betId());
-            assertThat(result.remainingPoolBalance()).isEqualByComparingTo(initialJackpotBalance);
-            assertThat(result.payoutAmount()).isEqualByComparingTo(BigDecimal.ZERO);
-            assertThat(rewardRepository.count()).isZero();
-        }
+        var result = mapper.readValue(responseAsString, EvaluationResult.class);
+        assertThat(result.won()).isFalse();
+        assertThat(result.betId()).isEqualTo(evaluationRequest.betId());
+        assertThat(result.remainingPoolBalance()).isEqualByComparingTo(initialJackpotBalance);
+        assertThat(result.payoutAmount()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(rewardRepository.count()).isZero();
+    }
 
-        @Test
-        void evaluateBet_AlreadyEvaluatedLosingBet_409() throws Exception {
-            var jackpot = jackpotRepository.save(new JackpotTestBuilder()
-                    .currentBalance(new BigDecimal("100"))
-                    .fixedRewardWinChance(BigDecimal.ZERO)
-                    .build());
-            var jackpotContribution = jackpotContributionRepository.save(
-                    new JackpotContributionTestBuilder(jackpot.getJackpotId()).build()
-            );
-            var evaluationRequest = new EvaluateBetRequestTestBuilder(jackpotContribution).build();
+    @Test
+    void evaluateBet_AlreadyEvaluatedLosingBet_409() throws Exception {
+        var jackpot = jackpotRepository.save(new JackpotTestBuilder()
+                .currentBalance(new BigDecimal("100"))
+                .fixedRewardWinChance(BigDecimal.ZERO)
+                .build());
+        var jackpotContribution = jackpotContributionRepository.save(
+                new JackpotContributionTestBuilder(jackpot.getJackpotId()).build()
+        );
+        var evaluationRequest = new EvaluateBetRequestTestBuilder(jackpotContribution).build();
 
-            mvc.perform(post("/api/v1/bets/evaluate")
-                            .content(mapper.writeValueAsString(evaluationRequest))
-                            .contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk());
+        mvc.perform(post("/api/v1/bets/evaluate")
+                        .content(mapper.writeValueAsString(evaluationRequest))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
 
-            mvc.perform(post("/api/v1/bets/evaluate")
-                            .content(mapper.writeValueAsString(evaluationRequest))
-                            .contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isConflict());
+        mvc.perform(post("/api/v1/bets/evaluate")
+                        .content(mapper.writeValueAsString(evaluationRequest))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isConflict());
 
-            assertThat(rewardRepository.count()).isZero();
-        }
+        assertThat(rewardRepository.count()).isZero();
+    }
 
-        @Test
-        void evaluateBet_VariableRewardChanceJackpotAndSureLossThreshold_Loss() throws Exception {
-            var jackpotBaseBalance = new BigDecimal("100");
-            var initialJackpotBalance = VARIABLE_REWARD_TIER1_THRESHOLD.add(BigDecimal.ONE);
-            var jackpot = jackpotRepository.save(JackpotTestBuilder.variableRewardChance()
-                    .baseAmount(jackpotBaseBalance)
-                    .currentBalance(initialJackpotBalance)
-                    .variableRewardTier1Chance(BigDecimal.ZERO)
-                    .build());
-            var jackpotContribution = jackpotContributionRepository.save(
-                    new JackpotContributionTestBuilder(jackpot.getJackpotId()).build()
-            );
-            var evaluationRequest = new EvaluateBetRequestTestBuilder(jackpotContribution).build();
+    @Test
+    void evaluateBet_VariableRewardChanceJackpotAndSureLossThreshold_Loss() throws Exception {
+        var jackpotBaseBalance = new BigDecimal("100");
+        var initialJackpotBalance = VARIABLE_REWARD_TIER1_THRESHOLD.add(BigDecimal.ONE);
+        var jackpot = jackpotRepository.save(JackpotTestBuilder.variableRewardChance()
+                .baseAmount(jackpotBaseBalance)
+                .currentBalance(initialJackpotBalance)
+                .variableRewardTier1Chance(BigDecimal.ZERO)
+                .build());
+        var jackpotContribution = jackpotContributionRepository.save(
+                new JackpotContributionTestBuilder(jackpot.getJackpotId()).build()
+        );
+        var evaluationRequest = new EvaluateBetRequestTestBuilder(jackpotContribution).build();
 
-            var responseAsString = mvc.perform(post("/api/v1/bets/evaluate")
-                            .content(mapper.writeValueAsString(evaluationRequest))
-                            .contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk())
-                    .andReturn().getResponse().getContentAsString();
+        var responseAsString = mvc.perform(post("/api/v1/bets/evaluate")
+                        .content(mapper.writeValueAsString(evaluationRequest))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
 
-            var result = mapper.readValue(responseAsString, EvaluationResult.class);
-            assertThat(result.won()).isFalse();
-            assertThat(result.betId()).isEqualTo(evaluationRequest.betId());
-            assertThat(result.remainingPoolBalance()).isEqualByComparingTo(initialJackpotBalance);
-            assertThat(result.payoutAmount()).isEqualByComparingTo(BigDecimal.ZERO);
-            assertThat(rewardRepository.count()).isZero();
-        }
+        var result = mapper.readValue(responseAsString, EvaluationResult.class);
+        assertThat(result.won()).isFalse();
+        assertThat(result.betId()).isEqualTo(evaluationRequest.betId());
+        assertThat(result.remainingPoolBalance()).isEqualByComparingTo(initialJackpotBalance);
+        assertThat(result.payoutAmount()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(rewardRepository.count()).isZero();
+    }
 
 }
