@@ -25,10 +25,95 @@ If no profile is passed, running `docker compose up` only initializes the infras
 ```bash
 docker-compose up -d
 ```
+Then start the Spring Boot app from your IDE or with:
+```bash
+mvn spring-boot:run
+```
+
+The API is available at `http://localhost:8080`.
+
+---
+
+## ✅ Seeded Jackpots
+
+The in-memory H2 database is initialized with these jackpot records from `src/main/resources/data.sql`:
+
+| Jackpot ID | Contribution Strategy | Reward Strategy | Initial Balance |
+| --- | --- | --- | --- |
+| `JACKPOT-123` | `VARIABLE` | `VARIABLE` | `5000.00` |
+| `JACKPOT-456` | `FIXED` | `FIXED` | `250.00` |
+| `JACKPOT-789` | `VARIABLE` | `FIXED` | `25000.00` |
+
+---
+
+## 🔌 API Usage
+
+### 1. Publish a bet to Kafka
+
+```bash
+curl -X POST http://localhost:8080/api/v1/bets/submit \
+  -H "Content-Type: application/json" \
+  -d '{
+    "betId": "BET-1001",
+    "userId": "USER-42",
+    "jackpotId": "JACKPOT-456",
+    "betAmount": 25.00
+  }'
+```
+
+This endpoint publishes the bet to the `jackpot-bets` Kafka topic. The Kafka consumer then processes the event asynchronously and creates a jackpot contribution record. Because processing is asynchronous, wait briefly before evaluating the same bet.
+
+The request body fields are:
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `betId` | Yes | Unique bet identifier. Reusing the same value is treated as a duplicate. |
+| `userId` | Yes | User placing the bet. |
+| `jackpotId` | Yes | Matching jackpot pool ID. Use one of the seeded IDs above. |
+| `betAmount` | Yes | Stake amount. Must be at least `0.01`. |
+
+### 2. Evaluate a bet for jackpot reward
+
+```bash
+curl -X POST http://localhost:8080/api/v1/bets/evaluate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "betId": "BET-1001"
+  }'
+```
+
+Example response:
+
+```json
+{
+  "betId": "BET-1001",
+  "won": false,
+  "payoutAmount": 0,
+  "remainingPoolBalance": 252.5000
+}
+```
+
+If the bet has not been consumed from Kafka yet, or if it has already been evaluated, the API returns `409 Conflict` with an error message.
+
+### 3. Inspect rewards
+
+```bash
+curl http://localhost:8080/api/v1/bets/rewards
+```
+
+This returns the persisted jackpot reward records, ordered newest first. It is mainly used by the demo UI.
+
+### 4. Inspect jackpot state
+
+```bash
+curl http://localhost:8080/api/v1/bets/pools
+```
+
+This returns the current jackpot records and balances.
 
 ## 🧪 How to Run the Tests
 
-The codebase includes exhaustive testing paradigms spanning unit strategy tests, mock pipeline validation, and repository state transactions under isolation constraints.
+The codebase includes integration tests covering Kafka publishing/consumption, contribution calculation, reward evaluation, and duplicate evaluation protection.
 
 To execute the entire test lifecycle suite, open your terminal and run:
 ```bash
