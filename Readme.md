@@ -1,5 +1,8 @@
 # Sporty Jackpot Service
 
+> **Note:** Code is available at https://github.com/Ice32/jackpot. The demo UI is available
+> at https://jackpot.kenanselimovic.com.
+
 This application manages jackpot pools by processing incoming bets for dynamic pool contribution via Kafka streams and evaluating real-time winning odds using configurable strategies.
 
 ---
