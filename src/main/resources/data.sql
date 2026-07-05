@@ -12,7 +12,7 @@ INSERT INTO reward_configuration (
     tier2_threshold, tier2_chance, pool_limit
 )
 VALUES
-    (1, 'VARIABLE', NULL, 5.00, 5000.00, 10.00, 10000.00, 20.00, 25000.00),
+    (1, 'VARIABLE', NULL, 10.00, 5000.00, 20.00, 10000.00, 25.00, 25000.00),
     (2, 'FIXED', 5.00, NULL, NULL, NULL, NULL, NULL, NULL),
     (3, 'FIXED', 8.00, NULL, NULL, NULL, NULL, NULL, NULL);
 
