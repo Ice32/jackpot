@@ -3,13 +3,16 @@ package com.sporty.jackpot_service.service.reward;
 import com.sporty.jackpot_service.model.RewardConfiguration;
 import com.sporty.jackpot_service.model.RewardStrategyType;
 import com.sporty.jackpot_service.model.VariableRewardConfiguration;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.util.concurrent.ThreadLocalRandom;
 
 @Component
+@RequiredArgsConstructor
 public class VariableRewardStrategy implements RewardStrategy {
+
+    private final RewardChanceEvaluator rewardChanceEvaluator;
 
     @Override
     public boolean evaluateWin(BigDecimal currentPoolBalance, RewardConfiguration configuration) {
@@ -24,15 +27,15 @@ public class VariableRewardStrategy implements RewardStrategy {
             return true;
         }
 
-        double winningChance = variableConfiguration.getBaseChance().doubleValue();
+        BigDecimal winningChance = variableConfiguration.getBaseChance();
 
         if (currentPoolBalance.compareTo(variableConfiguration.getTier2Threshold()) > 0) {
-            winningChance = variableConfiguration.getTier2Chance().doubleValue();
+            winningChance = variableConfiguration.getTier2Chance();
         } else if (currentPoolBalance.compareTo(variableConfiguration.getTier1Threshold()) > 0) {
-            winningChance = variableConfiguration.getTier1Chance().doubleValue();
+            winningChance = variableConfiguration.getTier1Chance();
         }
 
-        return ThreadLocalRandom.current().nextDouble(0.0, 100.0) < winningChance;
+        return rewardChanceEvaluator.isWinningChance(winningChance);
     }
 
     @Override
