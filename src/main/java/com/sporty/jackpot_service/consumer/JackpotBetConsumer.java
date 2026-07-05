@@ -7,6 +7,7 @@ import com.sporty.jackpot_service.repository.JackpotContributionRepository;
 import com.sporty.jackpot_service.repository.JackpotRepository;
 import com.sporty.jackpot_service.service.JackpotStrategyFactory;
 import com.sporty.jackpot_service.service.contribution.ContributionStrategy;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 
 @Service
+@RequiredArgsConstructor
 public class JackpotBetConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(JackpotBetConsumer.class);
@@ -23,14 +25,6 @@ public class JackpotBetConsumer {
     private final JackpotRepository jackpotRepository;
     private final JackpotContributionRepository contributionRepository;
     private final JackpotStrategyFactory strategyFactory;
-
-    public JackpotBetConsumer(JackpotRepository jackpotRepository,
-                              JackpotContributionRepository contributionRepository,
-                              JackpotStrategyFactory strategyFactory) {
-        this.jackpotRepository = jackpotRepository;
-        this.contributionRepository = contributionRepository;
-        this.strategyFactory = strategyFactory;
-    }
 
     /**
      * Listens to the 'jackpot-bets' Kafka topic verbatim from requirements.
@@ -42,7 +36,7 @@ public class JackpotBetConsumer {
             containerFactory = "kafkaListenerContainerFactory",
             properties = {"auto.offset.reset=earliest"}
     )
-    @Transactional // Guarantees atomicity: locks, state updates, and logs succeed or fail together
+    @Transactional
     public void consumeJackpotBet(SubmitBetRequest payload) {
         log.info("Received background bet event processing task for Bet ID: {}", payload.betId());
 

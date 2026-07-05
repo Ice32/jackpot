@@ -8,6 +8,7 @@ import com.sporty.jackpot_service.model.JackpotContributionTestBuilder;
 import com.sporty.jackpot_service.model.JackpotTestBuilder;
 import com.sporty.jackpot_service.repository.JackpotContributionRepository;
 import com.sporty.jackpot_service.repository.JackpotRepository;
+import com.sporty.jackpot_service.repository.JackpotRewardRepository;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +40,9 @@ class BetControllerIntegrationTest {
 
     @Autowired
     private JackpotContributionRepository jackpotContributionRepository;
+
+    @Autowired
+    private JackpotRewardRepository rewardRepository;
 
     @Value("${jackpot.strategies.contribution.fixed.contribution-rate}")
     private BigDecimal fixedContributionRate;
@@ -205,6 +209,11 @@ class BetControllerIntegrationTest {
         assertThat(result.betId()).isEqualTo(evaluationRequest.betId());
         assertThat(result.remainingPoolBalance()).isEqualByComparingTo(jackpotBaseBalance);
         assertThat(result.payoutAmount()).isEqualByComparingTo(initialJackpotBalance);
+        var rewardRecord = rewardRepository.findAll().getFirst();
+        assertThat(rewardRecord.getBetId()).isEqualTo(evaluationRequest.betId());
+        assertThat(rewardRecord.getUserId()).isEqualTo(evaluationRequest.userId());
+        assertThat(rewardRecord.getJackpotId()).isEqualTo(jackpot.getJackpotId());
+        assertThat(rewardRecord.getJackpotRewardAmount()).isEqualByComparingTo(initialJackpotBalance);
     }
 
     @Nested
@@ -243,6 +252,7 @@ class BetControllerIntegrationTest {
             assertThat(result.betId()).isEqualTo(evaluationRequest.betId());
             assertThat(result.remainingPoolBalance()).isEqualByComparingTo(jackpotBaseBalance);
             assertThat(result.payoutAmount()).isEqualByComparingTo(initialJackpotBalance);
+            assertThat(rewardRepository.count()).isEqualTo(1);
         }
 
         @Test
@@ -269,6 +279,7 @@ class BetControllerIntegrationTest {
             assertThat(result.betId()).isEqualTo(evaluationRequest.betId());
             assertThat(result.remainingPoolBalance()).isEqualByComparingTo(jackpotBaseBalance);
             assertThat(result.payoutAmount()).isEqualByComparingTo(initialJackpotBalance);
+            assertThat(rewardRepository.count()).isEqualTo(1);
         }
 
         @Test
@@ -295,6 +306,7 @@ class BetControllerIntegrationTest {
             assertThat(result.betId()).isEqualTo(evaluationRequest.betId());
             assertThat(result.remainingPoolBalance()).isEqualByComparingTo(initialJackpotBalance);
             assertThat(result.payoutAmount()).isEqualByComparingTo(BigDecimal.ZERO);
+            assertThat(rewardRepository.count()).isZero();
         }
     }
 
@@ -331,6 +343,7 @@ class BetControllerIntegrationTest {
             assertThat(result.betId()).isEqualTo(evaluationRequest.betId());
             assertThat(result.remainingPoolBalance()).isEqualByComparingTo(initialJackpotBalance);
             assertThat(result.payoutAmount()).isEqualByComparingTo(BigDecimal.ZERO);
+            assertThat(rewardRepository.count()).isZero();
         }
 
         @Test
@@ -357,6 +370,7 @@ class BetControllerIntegrationTest {
             assertThat(result.betId()).isEqualTo(evaluationRequest.betId());
             assertThat(result.remainingPoolBalance()).isEqualByComparingTo(initialJackpotBalance);
             assertThat(result.payoutAmount()).isEqualByComparingTo(BigDecimal.ZERO);
+            assertThat(rewardRepository.count()).isZero();
         }
     }
 

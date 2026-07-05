@@ -5,8 +5,10 @@ import com.sporty.jackpot_service.dto.EvaluationResult;
 import com.sporty.jackpot_service.exception.BetNotProcessedException;
 import com.sporty.jackpot_service.model.Jackpot;
 import com.sporty.jackpot_service.model.JackpotContribution;
+import com.sporty.jackpot_service.model.JackpotReward;
 import com.sporty.jackpot_service.repository.JackpotContributionRepository;
 import com.sporty.jackpot_service.repository.JackpotRepository;
+import com.sporty.jackpot_service.repository.JackpotRewardRepository;
 import com.sporty.jackpot_service.service.reward.RewardStrategy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,7 @@ public class BetEvaluationService {
 
     private final JackpotRepository jackpotRepository;
     private final JackpotContributionRepository contributionRepository;
+    private final JackpotRewardRepository rewardRepository;
     private final JackpotStrategyFactory strategyFactory;
 
     @Transactional
@@ -39,6 +42,15 @@ public class BetEvaluationService {
         if (won) {
             // Winner takes the current pool balance
             payoutAmount = jackpot.getCurrentBalance();
+
+            JackpotReward rewardRecord = new JackpotReward(
+                    payload.betId(),
+                    payload.userId(),
+                    jackpot.getJackpotId(),
+                    payoutAmount
+            );
+            rewardRepository.save(rewardRecord);
+
             // Reset jackpot back to seed/base amount
             jackpot.resetToBase();
         }

@@ -2,20 +2,19 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- Added viewport meta tag to fix mobile scaling -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jackpot Live Demo</title>
     <style>
         body {
             font-family: system-ui, sans-serif;
             text-align: center;
-            padding: 20px 10px; /* Reduced top padding, added side padding */
+            padding: 20px 10px;
             background: #121212;
             color: white;
             margin: 0;
         }
         h1 {
-            font-size: 1.8rem; /* Smaller text for mobile headers */
+            font-size: 1.8rem;
             margin-bottom: 5px;
         }
         p {
@@ -23,15 +22,43 @@
             color: #ccc;
             margin-bottom: 20px;
         }
+        /* Setup Input Field Wrapper */
+        .user-config {
+            max-width: 400px;
+            margin: 0 auto 15px auto;
+            text-align: left;
+            box-sizing: border-box;
+        }
+        .user-config label {
+            font-size: 0.8rem;
+            color: #aaa;
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .user-config input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #444;
+            background: #1e1e1e;
+            color: white;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .user-config input:focus {
+            border-color: #4cdf87;
+        }
         .box {
             border: 2px dashed #444;
             padding: 30px 20px;
             max-width: 400px;
             margin: 0 auto 20px auto;
             border-radius: 8px;
-            box-sizing: border-box; /* Prevents padding from breaking layout width */
+            box-sizing: border-box;
         }
-        /* Mobile-friendly Action Button */
         .btn {
             background: #4cdf87;
             color: #121212;
@@ -45,7 +72,7 @@
             max-width: 400px;
             box-shadow: 0 4px 15px rgba(76, 223, 135, 0.3);
             transition: transform 0.1s ease;
-            -webkit-tap-highlight-color: transparent; /* Removes blue flash on tap */
+            -webkit-tap-highlight-color: transparent;
         }
         .btn:active {
             transform: scale(0.98);
@@ -54,6 +81,54 @@
         .win { color: #4cdf87; font-weight: bold; font-size: 1.4rem; }
         .lose { color: #ff5252; font-size: 1.2rem; }
         .stats { color: #bbb; font-size: 0.9rem; margin-top: 10px; line-height: 1.4; }
+
+        .rewards-container {
+            max-width: 400px;
+            margin: 30px auto 0 auto;
+            text-align: left;
+            box-sizing: border-box;
+        }
+        .rewards-container h3 {
+            border-bottom: 1px solid #333;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+            color: #4cdf87;
+            font-size: 1.1rem;
+        }
+        .rewards-list {
+            max-height: 200px;
+            overflow-y: auto;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            border: 1px solid #222;
+            border-radius: 6px;
+            background: #1a1a1a;
+        }
+        .reward-item {
+            padding: 10px 12px;
+            border-bottom: 1px solid #2a2a2a;
+            font-size: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .reward-item:last-child {
+            border-bottom: none;
+        }
+        .reward-meta {
+            color: #aaa;
+        }
+        .reward-amount {
+            color: #4cdf87;
+            font-weight: bold;
+        }
+        .no-rewards {
+            padding: 15px;
+            color: #666;
+            text-align: center;
+            font-size: 0.85rem;
+        }
     </style>
 </head>
 <body>
@@ -61,34 +136,111 @@
 <h1>🏆 Sporty Jackpot Demo</h1>
 <p>Tap the button below or press <strong>SPACEBAR</strong> to test.</p>
 
+<!-- Username Config Component -->
+<div class="user-config">
+    <label for="usernameInput">👤 PLAYER NAME (OPTIONAL)</label>
+    <input type="text" id="usernameInput" placeholder="Enter your name..." maxlength="30">
+</div>
+
 <div class="box">
     <div id="result">
         <p style="color: #888;">Ready for action...</p>
     </div>
 </div>
 
-<!-- Added Touch Button for Smartphones -->
 <button id="triggerBet" class="btn">🎰 Place Bet</button>
 
+<div class="rewards-container">
+    <h3>🏆 Recent Winners Log</h3>
+    <ul id="rewardsList" class="rewards-list">
+        <li id="noRewardsPlaceholder" class="no-rewards">No jackpot payouts recorded in the system yet.</li>
+    </ul>
+</div>
+
 <script>
-    // Isolated core logic into a reusable function
+    // 1. Generate a backup tab-unique user ID that expires when closing the browser tab
+    const fallbackTabUserId = "USER-UI-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+
+    // 2. Setup inputs and pull values out of localStorage on initial initialization
+    const usernameInput = document.getElementById('usernameInput');
+    const savedName = localStorage.getItem('jackpot_demo_username');
+    if (savedName) {
+        usernameInput.value = savedName;
+    }
+
+    // 3. Keep localStorage updated when user types
+    usernameInput.addEventListener('input', (e) => {
+        const value = e.target.value.trim();
+        if (value) {
+            localStorage.setItem('jackpot_demo_username', value);
+        } else {
+            localStorage.removeItem('jackpot_demo_username');
+        }
+    });
+
+    // Helper to dynamically calculate dynamic identity execution
+    function getActiveUserId() {
+        const customName = usernameInput.value.trim();
+        return customName ? customName : fallbackTabUserId;
+    }
+
+    async function loadDatabaseRewards() {
+        try {
+            const response = await fetch('/api/v1/bets/rewards');
+            if (!response.ok) return;
+
+            const rewards = await response.json();
+            const rewardsList = document.getElementById('rewardsList');
+            rewardsList.innerHTML = '';
+
+            if (rewards.length === 0) {
+                rewardsList.innerHTML = '<li id="noRewardsPlaceholder" class="no-rewards">No jackpot payouts recorded in the system yet.</li>';
+                return;
+            }
+
+            rewards.forEach(reward => {
+                let dateStr = "Recent";
+                if (reward.createdAtDate) {
+                    const d = new Date(reward.createdAtDate);
+                    if (!isNaN(d)) dateStr = d.toLocaleTimeString();
+                }
+
+                const li = document.createElement('li');
+                li.className = 'reward-item';
+                li.innerHTML = `
+                    <div class="reward-meta">
+                        <strong>User: ${reward.userId}</strong><br>
+                        <small style="color: #777;">${reward.betId} | Time: ${dateStr}</small>
+                    </div>
+                    <div class="reward-amount">+$${reward.jackpotRewardAmount.toFixed(2)}</div>
+                `;
+                rewardsList.appendChild(li);
+            });
+        } catch (error) {
+            console.error("Failed to load historical payout records:", error);
+        }
+    }
+
     async function triggerWager() {
         const resultDiv = document.getElementById('result');
         resultDiv.innerHTML = '<p style="color: #888;">Processing wager...</p>';
 
-        const mockBetId = "DEMO-" + Math.random().toString(36).substring(2, 10).toUpperCase();
+        const mockBetId = "BETID-" + Math.random().toString(36).substring(2, 10).toUpperCase();
         const randomStake = (Math.random() * (200.0 - 100.0) + 100.0).toFixed(2);
         const targetJackpotId = "JACKPOT-123";
+
+        // Resolve target user name parameter safely
+        const currentUserId = getActiveUserId();
 
         const payload = {
             betId: mockBetId,
             jackpotId: targetJackpotId,
-            userId: "USER-UI-DEMO",
+            userId: currentUserId,
             betAmount: parseFloat(randomStake)
         };
 
         try {
-            // 1. Fire Async Pipeline: Publish bet to Kafka
+            // 1. Submit bet to ingestion pipeline
             await fetch('/api/v1/bets/submit', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -97,7 +249,7 @@
 
             await new Promise(resolve => setTimeout(resolve, 50));
 
-            // 2. Poll the evaluate endpoint with an exponential backoff retry mechanism
+            // 2. Poll evaluate endpoint
             const maxRetries = 5;
             let attempt = 0;
             let delay = 30;
@@ -130,19 +282,23 @@
                 throw new Error("Bet propagation timed out.");
             }
 
-            // 3. Render raw UI updates matching the JSON data contract
+            // 3. Render UI layout updates
             if (resultJson.won) {
                 resultDiv.innerHTML = `
                 <div class='win'>🎉 YOU WON THE JACKPOT!</div>
                 <div class='stats'>
-                    Payout Amount: $${resultJson.payoutAmount.toFixed(2)}
+                    Payout Amount: $${resultJson.payoutAmount.toFixed(2)}<br>
+                    <small style="color:#555">Winner: ${currentUserId}</small>
                 </div>`;
+
+                await loadDatabaseRewards();
             } else {
                 resultDiv.innerHTML = `
                 <div class='lose'>❌ Better luck next time!</div>
                 <div class='stats'>
                     Stake: $${parseFloat(randomStake).toFixed(2)}<br>
-                    Pool Balance: $${resultJson.remainingPoolBalance.toFixed(2)}
+                    Pool Balance: $${resultJson.remainingPoolBalance.toFixed(2)}<br>
+                    <small style="color:#555">Player: ${currentUserId}</small>
                 </div>`;
             }
 
@@ -151,15 +307,17 @@
         }
     }
 
-    // Listener 1: Mobile Button click/tap
+    // Event hooks
     document.getElementById('triggerBet').addEventListener('click', triggerWager);
 
-    // Listener 2: Desktop Spacebar fallback
     document.body.addEventListener('keyup', function(event) {
         if (event.key === ' ' && event.target.tagName !== 'INPUT') {
             triggerWager();
         }
     });
+
+    window.addEventListener('focus', loadDatabaseRewards);
+    loadDatabaseRewards();
 </script>
 
 </body>
