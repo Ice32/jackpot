@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 public record EvaluationResult(
         String betId,
         boolean won,
-        BigDecimal payoutAmount,
+        BigDecimal payoutAmount,    // 0 if loss
         BigDecimal remainingPoolBalance
 ) {
 

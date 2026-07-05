@@ -8,6 +8,7 @@ import java.util.Optional;
 
 @Repository
 public interface JackpotContributionRepository extends JpaRepository<JackpotContribution, Long> {
+
     Optional<JackpotContribution> findByJackpotId(String jackpotId);
 
     Optional<JackpotContribution> findByBetId(String betId);

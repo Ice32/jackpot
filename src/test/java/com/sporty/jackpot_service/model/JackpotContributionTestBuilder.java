@@ -1,7 +1,5 @@
 package com.sporty.jackpot_service.model;
 
-import jakarta.persistence.Column;
-import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;

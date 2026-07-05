@@ -12,9 +12,12 @@ import java.math.BigDecimal;
 import java.util.Optional;
 
 @Entity
-@Table(name = "jackpot", indexes = {
-        @Index(name = "unique_jackpot_jackpot_id", columnList = "jackpotId", unique = true)
-})
+@Table(
+        name = "jackpot",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_jackpot_jackpot_id", columnNames = "jackpot_id")
+        }
+)
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Setter(AccessLevel.PROTECTED)
@@ -22,7 +25,7 @@ import java.util.Optional;
 @Slf4j
 public class Jackpot extends BaseEntity {
 
-    @Column(nullable = false)
+    @Column(name = "jackpot_id", nullable = false, length = 50)
     private String jackpotId;
 
     @Column(nullable = false, length = 100)
@@ -36,11 +39,19 @@ public class Jackpot extends BaseEntity {
     private BigDecimal baseAmount;
 
     @OneToOne(cascade = CascadeType.ALL, optional = false)
-    @JoinColumn(name = "contribution_configuration_id", nullable = false)
+    @JoinColumn(
+            name = "contribution_configuration_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_jackpot_contribution_configuration")
+    )
     private ContributionConfiguration contributionConfiguration;
 
     @OneToOne(cascade = CascadeType.ALL, optional = false)
-    @JoinColumn(name = "reward_configuration_id", nullable = false)
+    @JoinColumn(
+            name = "reward_configuration_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_jackpot_reward_configuration")
+    )
     private RewardConfiguration rewardConfiguration;
 
     // Concurrency guard: protects against race conditions when updating the balance
