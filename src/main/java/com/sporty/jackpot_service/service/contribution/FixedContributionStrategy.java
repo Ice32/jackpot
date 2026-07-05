@@ -1,7 +1,8 @@
 package com.sporty.jackpot_service.service.contribution;
 
+import com.sporty.jackpot_service.model.ContributionConfiguration;
 import com.sporty.jackpot_service.model.ContributionStrategyType;
-import org.springframework.beans.factory.annotation.Value;
+import com.sporty.jackpot_service.model.FixedContributionConfiguration;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -9,15 +10,18 @@ import java.math.BigDecimal;
 @Component
 public class FixedContributionStrategy implements ContributionStrategy {
 
-    @Value("${jackpot.strategies.contribution.fixed.contribution-rate}")
-    private BigDecimal contributionRate;
-
     @Override
-    public BigDecimal calculateContribution(BigDecimal stakeAmount, BigDecimal currentPoolBalance) {
+    public BigDecimal calculateContribution(
+            BigDecimal stakeAmount,
+            BigDecimal currentPoolBalance,
+            ContributionConfiguration configuration
+    ) {
         if (stakeAmount == null || stakeAmount.compareTo(BigDecimal.ZERO) <= 0) {
             return BigDecimal.ZERO;
         }
-        return stakeAmount.multiply(contributionRate);
+
+        FixedContributionConfiguration fixedConfiguration = (FixedContributionConfiguration) configuration;
+        return stakeAmount.multiply(fixedConfiguration.getRate());
     }
 
     @Override

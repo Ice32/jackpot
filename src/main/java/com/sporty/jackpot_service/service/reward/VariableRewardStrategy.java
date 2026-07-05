@@ -1,36 +1,35 @@
 package com.sporty.jackpot_service.service.reward;
 
-import com.sporty.jackpot_service.config.VariableRewardProperties;
+import com.sporty.jackpot_service.model.RewardConfiguration;
 import com.sporty.jackpot_service.model.RewardStrategyType;
-import lombok.RequiredArgsConstructor;
+import com.sporty.jackpot_service.model.VariableRewardConfiguration;
 import org.springframework.stereotype.Component;
+
 import java.math.BigDecimal;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Component
-@RequiredArgsConstructor
 public class VariableRewardStrategy implements RewardStrategy {
 
-    private final VariableRewardProperties properties;
-
     @Override
-    public boolean evaluateWin(BigDecimal currentPoolBalance) {
+    public boolean evaluateWin(BigDecimal currentPoolBalance, RewardConfiguration configuration) {
         if (currentPoolBalance == null || currentPoolBalance.compareTo(BigDecimal.ZERO) <= 0) {
             return false;
         }
 
-        // 1. If the pool hits or exceeds the limit, win chance becomes 100%
-        if (currentPoolBalance.compareTo(properties.poolLimit()) >= 0) {
+        VariableRewardConfiguration variableConfiguration = (VariableRewardConfiguration) configuration;
+
+        // If the pool hits or exceeds the limit, win chance becomes 100%
+        if (currentPoolBalance.compareTo(variableConfiguration.getPoolLimit()) >= 0) {
             return true;
         }
 
-        // 2. Evaluate dynamic odds scaling based on properties
-        double winningChance = properties.baseChance();
+        double winningChance = variableConfiguration.getBaseChance().doubleValue();
 
-        if (currentPoolBalance.compareTo(properties.tier2Threshold()) > 0) {
-            winningChance = properties.tier2Chance();
-        } else if (currentPoolBalance.compareTo(properties.tier1Threshold()) > 0) {
-            winningChance = properties.tier1Chance();
+        if (currentPoolBalance.compareTo(variableConfiguration.getTier2Threshold()) > 0) {
+            winningChance = variableConfiguration.getTier2Chance().doubleValue();
+        } else if (currentPoolBalance.compareTo(variableConfiguration.getTier1Threshold()) > 0) {
+            winningChance = variableConfiguration.getTier1Chance().doubleValue();
         }
 
         return ThreadLocalRandom.current().nextDouble(0.0, 100.0) < winningChance;

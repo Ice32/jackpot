@@ -22,23 +22,3 @@ logging:
         kafka: WARN
     kafka: WARN
     state: WARN
-jackpot:
-  strategies:
-    contribution:
-      fixed:
-        contribution-rate: 0.10
-      variable:
-        initial-rate: 0.3   # Starts at 30% contribution
-        decay-step: 1000.00  # Bins calculated per $1,000 increments
-        decay-rate: 0.005    # Drops by 0.5% per bin
-        floor-rate: 0.05     # Levels off permanently at 5% minimum
-    reward:
-      fixed:
-        win-chance: 5 # unrealistically high chance to make the UI demo more fun
-      variable:
-        base-chance: 5  # unrealistically high chance to make the UI demo more fun
-        tier1-threshold: 5000.00
-        tier1-chance: 10
-        tier2-threshold: 10000.00
-        tier2-chance: 20
-        pool-limit: 25000.00

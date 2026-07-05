@@ -28,13 +28,13 @@ public class Jackpot extends BaseEntity {
     @Column(nullable = false, precision = 18, scale = 4)
     private BigDecimal baseAmount;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 30)
-    private ContributionStrategyType contributionStrategy;
+    @OneToOne(cascade = CascadeType.ALL, optional = false)
+    @JoinColumn(name = "contribution_configuration_id", nullable = false)
+    private ContributionConfiguration contributionConfiguration;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 30)
-    private RewardStrategyType rewardStrategy;
+    @OneToOne(cascade = CascadeType.ALL, optional = false)
+    @JoinColumn(name = "reward_configuration_id", nullable = false)
+    private RewardConfiguration rewardConfiguration;
 
     // Concurrency guard: protects against race conditions when updating the balance
     @Version
@@ -47,5 +47,13 @@ public class Jackpot extends BaseEntity {
 
     public void resetToBase() {
         this.currentBalance = this.baseAmount;
+    }
+
+    public ContributionStrategyType getContributionStrategy() {
+        return contributionConfiguration.getType();
+    }
+
+    public RewardStrategyType getRewardStrategy() {
+        return rewardConfiguration.getType();
     }
 }

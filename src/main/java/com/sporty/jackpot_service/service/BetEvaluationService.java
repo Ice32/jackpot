@@ -43,7 +43,7 @@ public class BetEvaluationService {
 
         RewardStrategy rewardStrategy = strategyFactory.getRewardStrategy(jackpot.getRewardStrategy());
 
-        boolean won = rewardStrategy.evaluateWin(jackpot.getCurrentBalance());
+        boolean won = rewardStrategy.evaluateWin(jackpot.getCurrentBalance(), jackpot.getRewardConfiguration());
 
         BigDecimal payoutAmount = BigDecimal.ZERO;
 

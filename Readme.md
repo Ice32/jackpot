@@ -36,13 +36,13 @@ The API is available at `http://localhost:8080`.
 
 ## ✅ Seeded Jackpots
 
-The in-memory H2 database is initialized with these jackpot records from `src/main/resources/data.sql`:
+The in-memory H2 database is initialized with these jackpot records from `src/main/resources/data.sql`. Each jackpot points to its own contribution and reward configuration records, so two jackpots can use the same strategy type with different rates or reward odds without adding strategy-specific fields to the jackpot entity.
 
-| Jackpot ID | Contribution Strategy | Reward Strategy | Initial Balance |
-| --- | --- | --- | --- |
-| `JACKPOT-123` | `VARIABLE` | `VARIABLE` | `5000.00` |
-| `JACKPOT-456` | `FIXED` | `FIXED` | `250.00` |
-| `JACKPOT-789` | `VARIABLE` | `FIXED` | `25000.00` |
+| Jackpot ID | Contribution Strategy | Reward Strategy | Initial Balance | Example Config |
+| --- | --- | --- | --- | --- |
+| `JACKPOT-123` | `VARIABLE` | `VARIABLE` | `5000.00` | 30% starting contribution, 5% base reward chance |
+| `JACKPOT-456` | `FIXED` | `FIXED` | `250.00` | 10% fixed contribution, 5% fixed reward chance |
+| `JACKPOT-789` | `VARIABLE` | `FIXED` | `25000.00` | 25% starting contribution, 8% fixed reward chance |
 
 ---
 
@@ -61,7 +61,7 @@ curl -X POST http://localhost:8080/api/v1/bets/submit \
   }'
 ```
 
-This endpoint publishes the bet to the `jackpot-bets` Kafka topic. The Kafka consumer then processes the event asynchronously and creates a jackpot contribution record. Because processing is asynchronous, wait briefly before evaluating the same bet.
+This endpoint returns `202 Accepted` after accepting the request for asynchronous publishing to the `jackpot-bets` Kafka topic. The Kafka consumer then processes the event and creates a jackpot contribution record. Because processing is asynchronous, wait briefly before evaluating the same bet.
 
 The request body fields are:
 

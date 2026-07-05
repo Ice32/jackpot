@@ -55,7 +55,11 @@ public class JackpotBetConsumer {
         ContributionStrategy strategy = strategyFactory.getContributionStrategy(jackpot.getContributionStrategy());
 
         // 4. Compute fractional stake allocation using safe scale models
-        BigDecimal calculatedContribution = strategy.calculateContribution(payload.betAmount(), jackpot.getCurrentBalance());
+        BigDecimal calculatedContribution = strategy.calculateContribution(
+                payload.betAmount(),
+                jackpot.getCurrentBalance(),
+                jackpot.getContributionConfiguration()
+        );
 
         log.debug("Applying {} allocation logic. Base: {}, Result: {}",
                 jackpot.getContributionStrategy(), payload.betAmount(), calculatedContribution);
