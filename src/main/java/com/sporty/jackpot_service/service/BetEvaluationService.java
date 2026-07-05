@@ -27,7 +27,14 @@ public class BetEvaluationService {
 
     @Transactional
     public EvaluationResult evaluateBet(EvaluateBetRequest payload) {
-        JackpotContribution contribution = contributionRepository.findByBetId(payload.betId())
+        String jackpotId = contributionRepository.findJackpotIdByBetId(payload.betId())
+                .orElseThrow(() -> new ProcessingConflictException(
+                        "Evaluation rejected: Bet ID " + payload.betId() + " does not exist or has not been processed yet."));
+
+        Jackpot jackpot = jackpotRepository.findByJackpotIdWithWriteLock(jackpotId)
+                .orElseThrow(() -> new IllegalArgumentException("Jackpot not found for ID: " + jackpotId));
+
+        JackpotContribution contribution = contributionRepository.findByBetIdWithWriteLock(payload.betId())
                 .orElseThrow(() -> new ProcessingConflictException(
                         "Evaluation rejected: Bet ID " + payload.betId() + " does not exist or has not been processed yet."));
         if (contribution.isEvaluated()) {
@@ -37,10 +44,6 @@ public class BetEvaluationService {
         if (rewardRepository.existsByBetId(payload.betId())) {
             throw new ProcessingConflictException("Evaluation rejected: Bet ID " + payload.betId() + " already has a reward record.");
         }
-
-        Jackpot jackpot = jackpotRepository.findByJackpotIdWithWriteLock(contribution.getJackpotId())
-                .orElseThrow(() -> new IllegalArgumentException("Jackpot not found for ID: " + contribution.getJackpotId()));
-
 
         Optional<JackpotReward> rewardOptional = jackpot.evaluate(contribution, strategyFactory);
 
