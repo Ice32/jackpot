@@ -9,8 +9,8 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(BetNotProcessedException.class)
-    public ResponseEntity<Map<String, String>> handleBetNotProcessed(BetNotProcessedException ex) {
+    @ExceptionHandler(ProcessingConflictException.class)
+    public ResponseEntity<Map<String, String>> handleProcessingConflict(ProcessingConflictException ex) {
         // HTTP 409 Conflict tells the frontend that the resource state isn't ready yet
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)

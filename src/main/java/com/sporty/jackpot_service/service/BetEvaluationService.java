@@ -2,7 +2,7 @@ package com.sporty.jackpot_service.service;
 
 import com.sporty.jackpot_service.dto.EvaluateBetRequest;
 import com.sporty.jackpot_service.dto.EvaluationResult;
-import com.sporty.jackpot_service.exception.BetNotProcessedException;
+import com.sporty.jackpot_service.exception.ProcessingConflictException;
 import com.sporty.jackpot_service.model.Jackpot;
 import com.sporty.jackpot_service.model.JackpotContribution;
 import com.sporty.jackpot_service.model.JackpotReward;
@@ -27,11 +27,19 @@ public class BetEvaluationService {
 
     @Transactional
     public EvaluationResult evaluateBet(EvaluateBetRequest payload) {
-        JackpotContribution contribution = contributionRepository.findByBetId(payload.betId())
-                .orElseThrow(() -> new BetNotProcessedException(
+        JackpotContribution contribution = contributionRepository.findByBetIdWithWriteLock(payload.betId())
+                .orElseThrow(() -> new ProcessingConflictException(
                         "Evaluation rejected: Bet ID " + payload.betId() + " does not exist or has not been processed yet."));
+        if (contribution.isEvaluated()) {
+            throw new ProcessingConflictException("Evaluation rejected: Bet ID " + payload.betId() + " has already been evaluated.");
+        }
+
         Jackpot jackpot = jackpotRepository.findByJackpotIdWithWriteLock(contribution.getJackpotId())
                 .orElseThrow(() -> new IllegalArgumentException("Jackpot not found for ID: " + contribution.getJackpotId()));
+
+        if (rewardRepository.existsByBetId(payload.betId())) {
+            throw new ProcessingConflictException("Evaluation rejected: Bet ID " + payload.betId() + " already has a reward record.");
+        }
 
         RewardStrategy rewardStrategy = strategyFactory.getRewardStrategy(jackpot.getRewardStrategy());
 
@@ -54,6 +62,9 @@ public class BetEvaluationService {
             // Reset jackpot back to seed/base amount
             jackpot.resetToBase();
         }
+
+        contribution.markEvaluated();
+        contributionRepository.save(contribution);
 
         // Save the updated state (explicit call, though managed by Hibernate transaction)
         jackpotRepository.save(jackpot);

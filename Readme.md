@@ -7,7 +7,7 @@ This application manages jackpot pools by processing incoming bets for dynamic p
 ## 🛠️ Prerequisites
 
 Before starting, ensure you have the following installed:
-* **Java 21** or higher
+* **Java 25** or higher
 * **Maven 3.8+**
 * **Docker & Docker Compose** (Optional, only if using a live Kafka broker cluster)
 
@@ -42,7 +42,7 @@ mvn clean test
 I have built an ultra-lightweight, zero-dependency interactive testing dashboard inside the application using HTMX.
 
 ### Steps to Run the Interactive Test:
-1. Ensure the application is up and running via `mvn spring-boot:run`.
+1. Ensure the infrastructure and the application are up and running via `docker compose --profile app up --build -d`.
 2. Open your preferred web browser and navigate to: `http://localhost:8080`
 3. Click anywhere on the dark background of the webpage to focus your browser window.
 4. Press the **SPACEBAR** key on your keyboard 🎲

@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,10 +13,16 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "jackpot_reward", indexes = {
-        @Index(name = "idx_jackpot_reward_bet_id", columnList = "betId"),
-        @Index(name = "idx_jackpot_reward_jackpot_id", columnList = "jackpotId")
-})
+@Table(
+        name = "jackpot_reward",
+        indexes = {
+                @Index(name = "idx_jackpot_reward_bet_id", columnList = "betId"),
+                @Index(name = "idx_jackpot_reward_jackpot_id", columnList = "jackpotId")
+        },
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_jackpot_reward_bet_id", columnNames = "betId")
+        }
+)
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

@@ -71,8 +71,8 @@ public class JackpotBetConsumer {
                 payload.jackpotId(),
                 payload.betAmount(),
                 calculatedContribution,
-                jackpot.getCurrentBalance()
-
+                jackpot.getCurrentBalance(),
+                false
         );
         contributionRepository.save(ledgerRecord);
 

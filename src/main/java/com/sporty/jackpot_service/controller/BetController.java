@@ -7,10 +7,8 @@ import com.sporty.jackpot_service.producer.JackpotBetProducer;
 import com.sporty.jackpot_service.service.BetEvaluationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/bets")
@@ -21,6 +19,7 @@ public class BetController {
     private final BetEvaluationService evaluationService;
 
     @PostMapping("/submit")
+    @ResponseStatus(HttpStatus.ACCEPTED)
     public void submitBet(@Valid @RequestBody SubmitBetRequest request) {
         producer.publishBet(request);
     }

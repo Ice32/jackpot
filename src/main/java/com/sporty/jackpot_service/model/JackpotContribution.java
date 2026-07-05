@@ -3,12 +3,18 @@ package com.sporty.jackpot_service.model;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.*;
 
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "jackpot_contribution")
+@Table(
+        name = "jackpot_contribution",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_jackpot_contribution_bet_id", columnNames = "betId")
+        }
+)
 @Getter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -32,4 +38,11 @@ public class JackpotContribution extends BaseEntity {
 
     @Column(precision = 18, scale = 4)
     private BigDecimal currentJackpotAmount;
+
+    @Column(nullable = false)
+    private boolean evaluated = false;
+
+    public void markEvaluated() {
+        this.evaluated = true;
+    }
 }

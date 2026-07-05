@@ -15,6 +15,7 @@ public class JackpotContributionTestBuilder {
     private BigDecimal stakeAmount = new BigDecimal("100");
     private BigDecimal contributionAmount = new BigDecimal("2");
     private BigDecimal currentJackpotAmount = new BigDecimal("1000");
+    private boolean evaluated = false;
 
    public JackpotContributionTestBuilder(String jackpotId) {
        this.jackpotId = jackpotId;
@@ -38,7 +39,8 @@ public class JackpotContributionTestBuilder {
               jackpotId,
               stakeAmount,
               contributionAmount,
-              currentJackpotAmount
+              currentJackpotAmount,
+              evaluated
       );
     }
 }

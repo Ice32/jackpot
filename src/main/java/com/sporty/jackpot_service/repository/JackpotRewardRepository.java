@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface JackpotRewardRepository extends JpaRepository<JackpotReward, Long> {
 
+    boolean existsByBetId(String betId);
 }

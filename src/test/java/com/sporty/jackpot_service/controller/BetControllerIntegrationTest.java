@@ -216,6 +216,29 @@ class BetControllerIntegrationTest {
         assertThat(rewardRecord.getJackpotRewardAmount()).isEqualByComparingTo(initialJackpotBalance);
     }
 
+    @Test
+    void evaluateBet_AlreadyEvaluatedWinningBet_409AndNoDuplicateReward() throws Exception {
+        var jackpot = jackpotRepository.save(JackpotTestBuilder.variableRewardChance()
+                .currentBalance(variableRewardPoolLimit.add(BigDecimal.ONE))
+                .build());
+        var jackpotContribution = jackpotContributionRepository.save(
+                new JackpotContributionTestBuilder(jackpot.getJackpotId()).build()
+        );
+        var evaluationRequest = new EvaluateBetRequestTestBuilder(jackpotContribution).build();
+
+        mvc.perform(post("/api/v1/bets/evaluate")
+                        .content(mapper.writeValueAsString(evaluationRequest))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        mvc.perform(post("/api/v1/bets/evaluate")
+                        .content(mapper.writeValueAsString(evaluationRequest))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isConflict());
+
+        assertThat(rewardRepository.count()).isEqualTo(1);
+    }
+
     @Nested
     @IntegrationTest
     @SpringBootTest(properties = {
@@ -343,6 +366,29 @@ class BetControllerIntegrationTest {
             assertThat(result.betId()).isEqualTo(evaluationRequest.betId());
             assertThat(result.remainingPoolBalance()).isEqualByComparingTo(initialJackpotBalance);
             assertThat(result.payoutAmount()).isEqualByComparingTo(BigDecimal.ZERO);
+            assertThat(rewardRepository.count()).isZero();
+        }
+
+        @Test
+        void evaluateBet_AlreadyEvaluatedLosingBet_409() throws Exception {
+            var jackpot = jackpotRepository.save(new JackpotTestBuilder()
+                    .currentBalance(new BigDecimal("100"))
+                    .build());
+            var jackpotContribution = jackpotContributionRepository.save(
+                    new JackpotContributionTestBuilder(jackpot.getJackpotId()).build()
+            );
+            var evaluationRequest = new EvaluateBetRequestTestBuilder(jackpotContribution).build();
+
+            mvc.perform(post("/api/v1/bets/evaluate")
+                            .content(mapper.writeValueAsString(evaluationRequest))
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk());
+
+            mvc.perform(post("/api/v1/bets/evaluate")
+                            .content(mapper.writeValueAsString(evaluationRequest))
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isConflict());
+
             assertThat(rewardRepository.count()).isZero();
         }
 
