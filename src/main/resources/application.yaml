@@ -5,10 +5,11 @@ spring:
     url: jdbc:h2:mem:jackpotdb;DB_CLOSE_DELAY=-1
     driver-class-name: org.h2.Driver
     username: sa
-    password:
+    password: ""
   h2:
     console:
-      enabled: true # Let's enable the console so you can inspect data
+      enabled: true # this would be false in an actual production deployment
+      path: /h2-console
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:

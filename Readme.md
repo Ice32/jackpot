@@ -34,6 +34,29 @@ The API is available at `http://localhost:8080`.
 
 ---
 
+## 🗄️ Viewing the H2 Database
+
+The application uses an in-memory H2 database configured in `src/main/resources/application.yaml`. Once the Spring Boot
+app is running, open:
+
+```text
+http://localhost:8080/h2-console
+```
+
+Use these login values:
+
+| Field        | Value                   |
+|--------------|-------------------------|
+| Driver Class | `org.h2.Driver`         |
+| JDBC URL     | `jdbc:h2:mem:jackpotdb` |
+| User Name    | `sa`                    |
+| Password     | Leave empty             |
+
+Click **Connect** to view tables such as `JACKPOT`, `JACKPOT_CONTRIBUTION`, and `JACKPOT_REWARD`. Because this is an
+in-memory database, its contents reset whenever the application process restarts.
+
+---
+
 ## ✅ Seeded Jackpots
 
 The in-memory H2 database is initialized with these jackpot records from `src/main/resources/data.sql`. Each jackpot points to its own contribution and reward configuration records, so two jackpots can use the same strategy type with different rates or reward odds without adding strategy-specific fields to the jackpot entity.
