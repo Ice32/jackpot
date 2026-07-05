@@ -1,9 +1,15 @@
 package com.sporty.jackpot_service.model;
 
+import com.sporty.jackpot_service.dto.SubmitBetRequest;
+import com.sporty.jackpot_service.service.JackpotStrategyFactory;
+import com.sporty.jackpot_service.service.contribution.ContributionStrategy;
+import com.sporty.jackpot_service.service.reward.RewardStrategy;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
 @Entity
 @Table(name = "jackpot", indexes = {
@@ -13,6 +19,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Setter(AccessLevel.PROTECTED)
 @Getter
+@Slf4j
 public class Jackpot extends BaseEntity {
 
     @Column(nullable = false)
@@ -40,9 +47,57 @@ public class Jackpot extends BaseEntity {
     @Version
     private Long version;
 
-    public void incrementBalance(BigDecimal amount) {
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) return;
-        this.currentBalance = this.currentBalance.add(amount);
+    public JackpotContribution contribute(SubmitBetRequest payload, JackpotStrategyFactory strategyFactory) {
+        BigDecimal calculatedContribution = calculateContribution(payload.betAmount(), strategyFactory);
+
+        log.debug("Applying {} allocation logic. Base: {}, Result: {}",
+                getContributionStrategy(), payload.betAmount(), calculatedContribution);
+
+        this.currentBalance = this.currentBalance.add(calculatedContribution);
+
+        return new JackpotContribution(
+                payload.betId(),
+                payload.userId(),
+                payload.jackpotId(),
+                payload.betAmount(),
+                calculatedContribution,
+                getCurrentBalance(),
+                false
+        );
+    }
+
+    private BigDecimal calculateContribution(BigDecimal betAmount, JackpotStrategyFactory strategyFactory) {
+        ContributionStrategy strategy = strategyFactory.getContributionStrategy(getContributionStrategy());
+
+        return strategy.calculateContribution(
+                betAmount,
+                getCurrentBalance(),
+                getContributionConfiguration()
+        );
+    }
+
+    public Optional<JackpotReward> evaluate(JackpotContribution contribution, JackpotStrategyFactory strategyFactory) {
+        RewardStrategy rewardStrategy = strategyFactory.getRewardStrategy(getRewardStrategy());
+
+        boolean won = rewardStrategy.evaluateWin(getCurrentBalance(), getRewardConfiguration());
+
+        Optional<JackpotReward> rewardOptional = Optional.empty();
+        if (won) {
+            rewardOptional = Optional.of(
+                    new JackpotReward(
+                            contribution.getBetId(),
+                            contribution.getUserId(),
+                            contribution.getJackpotId(),
+                            getCurrentBalance() // Winner takes the current pool balance
+                    ));
+
+            // Reset jackpot back to seed/base amount
+            resetToBase();
+        }
+
+        contribution.markEvaluated();
+
+        return rewardOptional;
     }
 
     public void resetToBase() {

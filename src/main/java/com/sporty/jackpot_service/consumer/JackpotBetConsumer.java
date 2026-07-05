@@ -2,19 +2,15 @@ package com.sporty.jackpot_service.consumer;
 
 import com.sporty.jackpot_service.dto.SubmitBetRequest;
 import com.sporty.jackpot_service.model.Jackpot;
-import com.sporty.jackpot_service.model.JackpotContribution;
 import com.sporty.jackpot_service.repository.JackpotContributionRepository;
 import com.sporty.jackpot_service.repository.JackpotRepository;
 import com.sporty.jackpot_service.service.JackpotStrategyFactory;
-import com.sporty.jackpot_service.service.contribution.ContributionStrategy;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
 
 @Service
 @RequiredArgsConstructor
@@ -51,33 +47,9 @@ public class JackpotBetConsumer {
         Jackpot jackpot = jackpotRepository.findByJackpotIdWithWriteLock(payload.jackpotId())
                 .orElseThrow(() -> new IllegalArgumentException("Target Jackpot jackpotId=" + payload.jackpotId() + "was not found in database records."));
 
-        // 3. Resolve calculation framework dynamically based on active configuration enums
-        ContributionStrategy strategy = strategyFactory.getContributionStrategy(jackpot.getContributionStrategy());
 
-        // 4. Compute fractional stake allocation using safe scale models
-        BigDecimal calculatedContribution = strategy.calculateContribution(
-                payload.betAmount(),
-                jackpot.getCurrentBalance(),
-                jackpot.getContributionConfiguration()
-        );
-
-        log.debug("Applying {} allocation logic. Base: {}, Result: {}",
-                jackpot.getContributionStrategy(), payload.betAmount(), calculatedContribution);
-
-        // 5. Mutate state totals inside entity boundaries
-        jackpot.incrementBalance(calculatedContribution);
-        jackpotRepository.save(jackpot); // Flushes lock and updates version metrics safely
-
-        // 6. Write to the transactional logging ledger
-        JackpotContribution ledgerRecord = new JackpotContribution(
-                payload.betId(),
-                payload.userId(),
-                payload.jackpotId(),
-                payload.betAmount(),
-                calculatedContribution,
-                jackpot.getCurrentBalance(),
-                false
-        );
+        // 3. Delegate to the core business logic
+        var ledgerRecord = jackpot.contribute(payload, strategyFactory);
         contributionRepository.save(ledgerRecord);
 
         log.info("Successfully updated pool balance tracking and committed ledger for Bet ID: {}. New Balance: {}",
