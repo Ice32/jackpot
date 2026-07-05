@@ -18,7 +18,7 @@ public class JackpotBetProducer {
         kafkaTemplate.send(TOPIC_NAME, payload)
                 .whenComplete((result, exception) -> {
                     if (exception != null) {
-                        log.error("Publishing failed for Bet ID: " + payload.betId(), exception);
+                        log.error("Publishing failed for Bet ID: {}", payload.betId(), exception);
                     } else {
                         log.info("Successfully appended to partition [{}], offset [{}]",
                                 result.getRecordMetadata().partition(),

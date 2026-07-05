@@ -13,7 +13,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/bets")
 @RequiredArgsConstructor
-public class BetRewardQueryController {
+public class BetRewardController { // only for the UI demo
 
     private final JackpotRewardRepository rewardRepository;
 

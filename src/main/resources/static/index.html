@@ -22,7 +22,6 @@
             color: #ccc;
             margin-bottom: 20px;
         }
-        /* Setup Input Field Wrapper */
         .user-config {
             max-width: 400px;
             margin: 0 auto 15px auto;
@@ -36,7 +35,7 @@
             margin-bottom: 5px;
             font-weight: bold;
         }
-        .user-config input {
+        .user-config input, .user-config select {
             width: 100%;
             padding: 12px;
             border: 1px solid #444;
@@ -48,7 +47,7 @@
             outline: none;
             transition: border-color 0.2s;
         }
-        .user-config input:focus {
+        .user-config input:focus, .user-config select:focus {
             border-color: #4cdf87;
         }
         .box {
@@ -129,14 +128,30 @@
             text-align: center;
             font-size: 0.85rem;
         }
+        .badge {
+            background: #333;
+            color: #ffb74d;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-left: 5px;
+        }
     </style>
 </head>
 <body>
 
 <h1>🏆 Sporty Jackpot Demo</h1>
-<p>Tap the button below or press <strong>SPACEBAR</strong> to test.</p>
+<p>Select a pool, configure your name, and use the button or **SPACEBAR**.</p>
 
-<!-- Username Config Component -->
+<!-- Dynamic Selection Configuration Block -->
+<div class="user-config" style="margin-bottom: 10px;">
+    <label for="jackpotSelect">🎯 TARGET JACKPOT POOL</label>
+    <select id="jackpotSelect">
+        <option value="">Loading available pools...</option>
+    </select>
+</div>
+
 <div class="user-config">
     <label for="usernameInput">👤 PLAYER NAME (OPTIONAL)</label>
     <input type="text" id="usernameInput" placeholder="Enter your name..." maxlength="30">
@@ -151,24 +166,26 @@
 <button id="triggerBet" class="btn">🎰 Place Bet</button>
 
 <div class="rewards-container">
-    <h3>🏆 Recent Winners Log</h3>
+    <h3>🏆 Recent Winners Log (All Pools)</h3>
     <ul id="rewardsList" class="rewards-list">
         <li id="noRewardsPlaceholder" class="no-rewards">No jackpot payouts recorded in the system yet.</li>
     </ul>
 </div>
 
 <script>
-    // 1. Generate a backup tab-unique user ID that expires when closing the browser tab
     const fallbackTabUserId = "USER-UI-" + Math.random().toString(36).substring(2, 8).toUpperCase();
 
-    // 2. Setup inputs and pull values out of localStorage on initial initialization
     const usernameInput = document.getElementById('usernameInput');
+    const jackpotSelect = document.getElementById('jackpotSelect');
+
+    // In-memory map to store jackpotId -> jackpotName mapping
+    let jackpotMap = {};
+
     const savedName = localStorage.getItem('jackpot_demo_username');
     if (savedName) {
         usernameInput.value = savedName;
     }
 
-    // 3. Keep localStorage updated when user types
     usernameInput.addEventListener('input', (e) => {
         const value = e.target.value.trim();
         if (value) {
@@ -178,10 +195,38 @@
         }
     });
 
-    // Helper to dynamically calculate dynamic identity execution
     function getActiveUserId() {
         const customName = usernameInput.value.trim();
         return customName ? customName : fallbackTabUserId;
+    }
+
+    // Dynamic fetch to initialize and refresh the selection dropdown options
+    async function loadJackpotPools() {
+        try {
+            const response = await fetch('/api/v1/bets/pools');
+            if (!response.ok) return;
+
+            const pools = await response.json();
+            const currentSelection = jackpotSelect.value;
+
+            jackpotSelect.innerHTML = '';
+            jackpotMap = {}; // Reset map
+
+            pools.forEach(pool => {
+                // Populate the mapping dictionary
+                jackpotMap[pool.jackpotId] = pool.name;
+
+                const option = document.createElement('option');
+                option.value = pool.jackpotId;
+                option.textContent = `${pool.name} ($${pool.currentBalance.toFixed(2)})`;
+                if (pool.jackpotId === currentSelection) {
+                    option.selected = true;
+                }
+                jackpotSelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error("Failed to load available jackpot options:", error);
+        }
     }
 
     async function loadDatabaseRewards() {
@@ -205,11 +250,15 @@
                     if (!isNaN(d)) dateStr = d.toLocaleTimeString();
                 }
 
+                // Resolve readable name from the map, fallback to ID if it's not loaded yet
+                const friendlyJackpotName = jackpotMap[reward.jackpotId] || reward.jackpotId;
+
                 const li = document.createElement('li');
                 li.className = 'reward-item';
                 li.innerHTML = `
                     <div class="reward-meta">
-                        <strong>User: ${reward.userId}</strong><br>
+                        <strong>User: ${reward.userId}</strong>
+                        <span class="badge">${friendlyJackpotName}</span><br>
                         <small style="color: #777;">${reward.betId} | Time: ${dateStr}</small>
                     </div>
                     <div class="reward-amount">+$${reward.jackpotRewardAmount.toFixed(2)}</div>
@@ -222,19 +271,23 @@
     }
 
     async function triggerWager() {
+        const selectedJackpotId = jackpotSelect.value;
+        if (!selectedJackpotId) {
+            alert("Please wait until jackpot records finish loading from the server.");
+            return;
+        }
+
         const resultDiv = document.getElementById('result');
         resultDiv.innerHTML = '<p style="color: #888;">Processing wager...</p>';
 
         const mockBetId = "BETID-" + Math.random().toString(36).substring(2, 10).toUpperCase();
         const randomStake = (Math.random() * (200.0 - 100.0) + 100.0).toFixed(2);
-        const targetJackpotId = "JACKPOT-123";
-
-        // Resolve target user name parameter safely
         const currentUserId = getActiveUserId();
+        const selectedJackpotName = jackpotMap[selectedJackpotId] || selectedJackpotId;
 
         const payload = {
             betId: mockBetId,
-            jackpotId: targetJackpotId,
+            jackpotId: selectedJackpotId,
             userId: currentUserId,
             betAmount: parseFloat(randomStake)
         };
@@ -287,20 +340,23 @@
                 resultDiv.innerHTML = `
                 <div class='win'>🎉 YOU WON THE JACKPOT!</div>
                 <div class='stats'>
+                    Target: <strong>${selectedJackpotName}</strong><br>
                     Payout Amount: $${resultJson.payoutAmount.toFixed(2)}<br>
                     <small style="color:#555">Winner: ${currentUserId}</small>
                 </div>`;
-
-                await loadDatabaseRewards();
             } else {
                 resultDiv.innerHTML = `
                 <div class='lose'>❌ Better luck next time!</div>
                 <div class='stats'>
+                    Target: <strong>${selectedJackpotName}</strong><br>
                     Stake: $${parseFloat(randomStake).toFixed(2)}<br>
                     Pool Balance: $${resultJson.remainingPoolBalance.toFixed(2)}<br>
                     <small style="color:#555">Player: ${currentUserId}</small>
                 </div>`;
             }
+
+            // Refresh UI components synchronously following updates
+            await Promise.all([loadJackpotPools(), loadDatabaseRewards()]);
 
         } catch (error) {
             resultDiv.innerHTML = `<div class='lose' style='color: #ffa726;'>⚠️ Error: ${error.message}</div>`;
@@ -316,8 +372,15 @@
         }
     });
 
-    window.addEventListener('focus', loadDatabaseRewards);
-    loadDatabaseRewards();
+    // Synchronize both dropdown options and historical feeds on load/refocus
+    async function refreshDashboardState() {
+        // We look up pools first to build our id -> name map before rendering rewards
+        await loadJackpotPools();
+        await loadDatabaseRewards();
+    }
+
+    window.addEventListener('focus', refreshDashboardState);
+    refreshDashboardState();
 </script>
 
 </body>

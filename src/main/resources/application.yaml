@@ -26,17 +26,17 @@ jackpot:
   strategies:
     contribution:
       fixed:
-        contribution-rate: 0.05
+        contribution-rate: 0.10
       variable:
-        initial-rate: 0.1   # Starts at 5% contribution
+        initial-rate: 0.3   # Starts at 30% contribution
         decay-step: 1000.00  # Bins calculated per $1,000 increments
         decay-rate: 0.005    # Drops by 0.5% per bin
-        floor-rate: 0.01     # Levels off permanently at 1% minimum
+        floor-rate: 0.05     # Levels off permanently at 5% minimum
     reward:
       fixed:
-        win-chance: 0.5           # Flat 0.5% chance to win on any bet
+        win-chance: 5 # unrealistically high chance to make the UI demo more fun
       variable:
-        base-chance: 5
+        base-chance: 5  # unrealistically high chance to make the UI demo more fun
         tier1-threshold: 5000.00
         tier1-chance: 10
         tier2-threshold: 10000.00
