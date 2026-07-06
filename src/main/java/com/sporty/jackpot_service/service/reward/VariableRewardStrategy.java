@@ -37,7 +37,7 @@ public class VariableRewardStrategy implements RewardStrategy {
             winningChance = variableConfiguration.getTier1Chance();
         }
 
-        log.debug("Variable reward configuration: {}", variableConfiguration);
+        log.debug("Using {}", variableConfiguration);
         log.debug("Winning chance: {}", winningChance);
 
         return rewardChanceEvaluator.isWinningChance(winningChance);

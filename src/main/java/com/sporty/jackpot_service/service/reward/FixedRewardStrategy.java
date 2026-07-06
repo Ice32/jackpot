@@ -4,12 +4,14 @@ import com.sporty.jackpot_service.model.FixedRewardConfiguration;
 import com.sporty.jackpot_service.model.RewardConfiguration;
 import com.sporty.jackpot_service.model.RewardStrategyType;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class FixedRewardStrategy implements RewardStrategy {
 
     private final RewardChanceEvaluator rewardChanceEvaluator;
@@ -21,6 +23,7 @@ public class FixedRewardStrategy implements RewardStrategy {
         }
 
         FixedRewardConfiguration fixedConfiguration = (FixedRewardConfiguration) configuration;
+        log.debug("Using {}", fixedConfiguration);
         return rewardChanceEvaluator.isWinningChance(fixedConfiguration.getWinChance());
     }
 

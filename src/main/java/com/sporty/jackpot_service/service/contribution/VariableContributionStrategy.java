@@ -42,7 +42,7 @@ public class VariableContributionStrategy implements ContributionStrategy {
         BigDecimal calculatedRate = variableConfiguration.getInitialRate().subtract(totalDecay);
 
         // 4. Ensure it never falls below the floor rate
-        log.debug("Variable contribution configuration: {}", variableConfiguration);
+        log.debug("Using {}", variableConfiguration);
         log.debug("Decay steps: {}, total decay: {}, calculated rate: {}", steps, totalDecay, calculatedRate);
         return calculatedRate.max(variableConfiguration.getFloorRate());
     }
