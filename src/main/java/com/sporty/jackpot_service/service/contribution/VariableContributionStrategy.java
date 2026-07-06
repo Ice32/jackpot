@@ -3,12 +3,14 @@ package com.sporty.jackpot_service.service.contribution;
 import com.sporty.jackpot_service.model.ContributionConfiguration;
 import com.sporty.jackpot_service.model.ContributionStrategyType;
 import com.sporty.jackpot_service.model.VariableContributionConfiguration;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 @Component
+@Slf4j
 public class VariableContributionStrategy implements ContributionStrategy {
 
     @Override
@@ -40,6 +42,8 @@ public class VariableContributionStrategy implements ContributionStrategy {
         BigDecimal calculatedRate = variableConfiguration.getInitialRate().subtract(totalDecay);
 
         // 4. Ensure it never falls below the floor rate
+        log.debug("Variable contribution configuration: {}", variableConfiguration);
+        log.debug("Decay steps: {}, total decay: {}, calculated rate: {}", steps, totalDecay, calculatedRate);
         return calculatedRate.max(variableConfiguration.getFloorRate());
     }
 

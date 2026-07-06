@@ -61,7 +61,7 @@ public class Jackpot extends BaseEntity {
     public JackpotContribution contribute(SubmitBetRequest payload, JackpotStrategyFactory strategyFactory) {
         BigDecimal calculatedContribution = calculateContribution(payload.betAmount(), strategyFactory);
 
-        log.debug("Applying {} allocation logic. Base: {}, Result: {}",
+        log.debug("Applying {} allocation logic. Stake: {}, calculated contribution: {}",
                 getContributionStrategy(), payload.betAmount(), calculatedContribution);
 
         this.currentBalance = this.currentBalance.add(calculatedContribution);

@@ -4,12 +4,14 @@ import com.sporty.jackpot_service.model.RewardConfiguration;
 import com.sporty.jackpot_service.model.RewardStrategyType;
 import com.sporty.jackpot_service.model.VariableRewardConfiguration;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class VariableRewardStrategy implements RewardStrategy {
 
     private final RewardChanceEvaluator rewardChanceEvaluator;
@@ -34,6 +36,9 @@ public class VariableRewardStrategy implements RewardStrategy {
         } else if (currentPoolBalance.compareTo(variableConfiguration.getTier1Threshold()) > 0) {
             winningChance = variableConfiguration.getTier1Chance();
         }
+
+        log.debug("Variable reward configuration: {}", variableConfiguration);
+        log.debug("Winning chance: {}", winningChance);
 
         return rewardChanceEvaluator.isWinningChance(winningChance);
     }
