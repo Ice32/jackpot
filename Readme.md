@@ -13,7 +13,7 @@ Before starting, ensure you have the following installed:
 
 * **Java 21** or higher
 * **Maven 3.8+**
-* **Docker & Docker Compose** (Optional, only if using a live Kafka broker cluster)
+* **Docker & Docker Compose**
 
 ---
 
@@ -31,7 +31,7 @@ docker-compose up -d
 ```
 Then start the Spring Boot app from your IDE or with:
 ```bash
-mvn spring-boot:run
+./mvnw spring-boot:run
 ```
 
 The API is available at `http://localhost:8080`.
@@ -180,14 +180,14 @@ The codebase includes integration tests covering Kafka publishing/consumption, c
 
 To execute the entire test lifecycle suite, open your terminal and run:
 ```bash
-mvn clean test
+./mvnw clean test
 ```
 
 ---
 
 ## 🎮 How to Test Through the UI Demo
 
-I have built an ultra-lightweight, zero-dependency interactive testing dashboard inside the application using HTMX.
+I have built an ultra-lightweight, zero-dependency interactive testing dashboard inside the application.
 
 ### Steps to Run the Interactive Test:
 1. Ensure the infrastructure and the application are up and running via `docker compose --profile app up --build -d`.
