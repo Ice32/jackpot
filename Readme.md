@@ -124,6 +124,8 @@ curl -X POST http://localhost:8080/api/v1/bets/submit \
 
 This endpoint returns `202 Accepted` after accepting the request for asynchronous publishing to the `jackpot-bets` Kafka topic. The Kafka consumer then processes the event and creates a jackpot contribution record. Because processing is asynchronous, wait briefly before evaluating the same bet.
 
+> **Note:** `betId` values cannot be reused when publishing bets. Each submitted bet must use a new unique `betId`.
+
 The request body fields are:
 
 | Field | Required | Description |

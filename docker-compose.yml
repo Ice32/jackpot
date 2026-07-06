@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   kafka:
     image: confluentinc/cp-kafka:7.6.0
@@ -21,6 +19,12 @@ services:
       KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
       KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
       CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+      # Restricts Kafka's internal JVM heap allocation to 512MB
+      KAFKA_JVM_PERFORMANCE_OPTS: "-Xmx512m -Xms512m"
+    deploy:
+      resources:
+        limits:
+          memory: 750m # Hard cap on container to protect host OS
     networks:
       - jackpot-network
 
@@ -33,6 +37,12 @@ services:
       - kafka
     environment:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      # Restricts Spring Boot heap allocation to 512MB
+      JAVA_TOOL_OPTIONS: "-Xmx512m -Xms512m"
+    deploy:
+      resources:
+        limits:
+          memory: 750m # Hard cap on container to protect host OS
     networks:
       - jackpot-network
     profiles:
